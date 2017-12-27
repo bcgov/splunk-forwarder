@@ -30,21 +30,17 @@ if (process.env.USE_SPLUNK &&
 }
 
 // Winston Logger init
-var winstonLogger = winston.createLogger({
+var winstonLogger = new winston.Logger({
     level: FILE_LOG_LEVEL,
-    format: winston.format.json(),
-    transport: [
-        new winston.transports.Console(),
-        new winston.transports.File({ filename: FILE_LOG_NAME, level: FILE_LOG_LEVEL })
+    transports: [
+        new winston.transports.Console({ timestamp: true }),
+        new winston.transports.File({ filename: FILE_LOG_NAME, level: FILE_LOG_LEVEL, timestamp: true })
     ]
 });
 
 // add timestamp, remove console if not in debug mode
-winston.add(winston.transport.File, {'timestamp': true});
 if (FILE_LOG_LEVEL != 'debug')
     winston.remove(winston.transports.Console);
-else
-    winston.add(winston.transports.Console, {'timestamp': true});
 
 // Create a new Splunk logger
 if (USE_SPLUNK) {
@@ -135,4 +131,4 @@ app.post('/log', function (req, res) {
         });
 });
 
-winstonLogger.info(`Splunk Forwarder started on host:` +  SERVER_IP + `  port: ` + SERVER_PORT.green.bold);
+winstonLogger.info(`Splunk Forwarder started on host:` +  SERVICE_IP + `  port: ` + SERVICE_PORT);
