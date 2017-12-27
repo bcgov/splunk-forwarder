@@ -31,7 +31,7 @@ if (process.env.USE_SPLUNK &&
 
 // Winston Logger init
 var winstonLogger = winston.createLogger({
-    level: LOG_LEVEL,
+    level: FILE_LOG_LEVEL,
     format: winston.format.json(),
     transport: [
         new winston.transports.Console(),
