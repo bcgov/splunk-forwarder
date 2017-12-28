@@ -99,18 +99,35 @@ var getLog = function (req) {
             }
         }
         if (authorized) {
-            // log to file system
+            // extract stuff
             var mess = stringify(req.body);
             var host = ((req.get('host') && req.get('host').length > 0) ? req.get('host') : '?');
+            var logsource = ((req.get('logsource') && req.get('logsource').length > 0) ? req.get('logsource') : '?');
+            var fhost = ((req.get('http_x_forwarded_host') && req.get('http_x_forwarded_host').length > 0) ? req.get('http_x_forwarded_host') : '?');
+            var conf = ((req.get('confirmationNumber') && req.get('confirmationNumber').length > 0) ? req.get('confirmationNumber') : '?');
+            var name = ((req.get('name') && req.get('name').length > 0) ? req.get('name') : '?');
+            var severity = ((req.get('severity') && req.get('severity').length > 0) ? req.get('severity') : '?');
+            var tags = ((req.get('tags') && req.get('tags').length > 0) ? req.get('tags') : '?');
+            var program = ((req.get('program') && req.get('program').length > 0) ? req.get('program') : '?');
+            var times = ((req.get('timestamp') && req.get('timestamp').length > 0) ? req.get('timestamp') : '?');
 
-            winstonLogger.info(mess);
+            // write to local filesystem
+            winstonLogger.info(`mess(${mess}) host(${host}) logsource(${logsource}) fhost(${fhost}) conf(${conf}) name(${name}) severity(${severity}) tags(${tags}) program(${program}) times(${times})`);
 
             // forward to splunk
             if (USE_SPLUNK) {
                 var payload = {
                     message: {
                         log: mess,
-                        host: host
+                        host: host,
+                        logsource: logsource,
+                        forwardedHost: fhost,
+                        confirmationNumber: conf,
+                        name: name,
+                        severity: severity,
+                        tags: tags,
+                        program: program,
+                        times: times
                     },
                     // metadata: {
                     //    sourceIP: "TBD",
