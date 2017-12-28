@@ -9,8 +9,8 @@ var SplunkLogger = require("./splunklogger");
 var utils = require("./utils");
 
 // configuration via environment variables
-var SERVICE_IP = process.env.SERVICE_IP || '0.0.0.0';
-var SERVICE_PORT = process.env.SERVICE_PORT || 5040;
+var SERVICE_IP = process.env.SERVICE_IP || 'localhost';
+var SERVICE_PORT = process.env.SERVICE_PORT || 5504;
 var SERVICE_AUTH_TOKEN = 'NO_TOKEN';
 var USE_AUTH = (process.env.SERVICE_USE_AUTH && process.env.SERVICE_USE_AUTH == 'true');
 if (USE_AUTH && process.env.SERVICE_AUTH_TOKEN && process.env.SERVICE_AUTH_TOKEN.length > 0) {
@@ -25,7 +25,7 @@ if (process.env.USE_SPLUNK &&
     process.env.SPLUNK_URL &&
     process.env.SPLUNK_URL.length > 0) {
         USE_SPLUNK = true;
-        SPLUNK_URL = process.env.SPLUNK_SERVER_URL;
+        SPLUNK_URL = process.env.SPLUNK_URL;
 }
 
 // Winston Logger init
