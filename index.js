@@ -1,6 +1,7 @@
 // dependencies
 var winston = require('winston');
 var bodyParser = require('body-parser');
+var stringify = require('json-stringify-safe');
 var app = require('express')();
 
 // SplunkLogger
@@ -86,7 +87,8 @@ var getLog = function (req) {
             }
         }
         // log to file system
-        winstonLogger.info(`getLog: ${req.payload}`);
+        var mess = stringify (req.body);
+        winstonLogger.info(`getLog: ${mess}`);
         winstonLogger.debug(`use_splunk: ${USE_SPLUNK}`);
 
         // forward to splunk
