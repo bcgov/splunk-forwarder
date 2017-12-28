@@ -10,7 +10,7 @@
   "homepage": "",
   "main": "index.js",
   "scripts": {
-    "prestart": "npm install ; npm install request --save",
+    "prestart": "npm install ; npm install request --save; npm install winston-daily-rotate-file --save",
     "start": "node $NODE_DEBUG_OPTION index.js server",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -20,7 +20,8 @@
     "json-stringify-safe": "^5.0.1",
     "jsonwebtoken": "^7.3.0",
     "request": "^2.83.0",
-    "winston": "^2.4.0"
+    "winston": "^2.4.0",
+    "winston-daily-rotate-file": "^1.7.2"
   },
   "engines": {
     "node": ">=4.2.5"

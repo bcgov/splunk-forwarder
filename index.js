@@ -1,5 +1,6 @@
 // dependencies
 var winston = require('winston');
+require('winston-daily-rotate-file');
 var bodyParser = require('body-parser');
 var stringify = require('json-stringify-safe');
 var app = require('express')();
@@ -17,7 +18,7 @@ if (USE_AUTH && process.env.SERVICE_AUTH_TOKEN && process.env.SERVICE_AUTH_TOKEN
     SERVICE_AUTH_TOKEN = process.env.SERVICE_AUTH_TOKEN;
 }
 var FILE_LOG_LEVEL = process.env.FILE_LOG_LEVEL || 'debug';
-var FILE_LOG_NAME = process.env.FILE_LOG_NAME || './msp.log';
+var FILE_LOG_NAME = process.env.FILE_LOG_NAME || './logs/msp.log';
 var USE_SPLUNK = false;
 var SPLUNK_URL = 'NO_SPLUNK';
 if (process.env.USE_SPLUNK &&
@@ -33,12 +34,21 @@ if (process.env.RETRY_COUNT &&
         RETRY_COUNT = parseInt (process.env.RETRY_COUNT);
 }
 
+// Daily rotate file transport for logs
+var transport = new winston.transports.DailyRotateFile({
+    filename: FILE_LOG_NAME,
+    datePattern: 'yyyy-MM-dd-',
+    prepend: true,
+    level: FILE_LOG_LEVEL,
+    timestamp: true
+});
+
 // Winston Logger init
 var winstonLogger = new winston.Logger({
     level: FILE_LOG_LEVEL,
     transports: [
         new winston.transports.Console({ timestamp: true }),
-        new winston.transports.File({ filename: FILE_LOG_NAME, level: FILE_LOG_LEVEL, timestamp: true })
+        transport
     ]
 });
 
@@ -75,9 +85,7 @@ if (args.length == 3 && args[2] == 'server') {
     var server = app.listen(SERVICE_PORT, SERVICE_IP, function() {
         var host = server.address().address;
         var port = server.address().port;
-        winstonLogger.info(`MyGov Captcha Service listening at http://${host}:${port}`);
-        winstonLogger.info(`File location is: ${FILE_LOG_NAME}`);
-        winstonLogger.info(`File log level is: ${FILE_LOG_LEVEL}`);
+        winstonLogger.info(`loglevel(${FILE_LOG_LEVEL}) fileLocation(${FILE_LOG_NAME})`);
     });
 }
 
@@ -93,19 +101,22 @@ var getLog = function (req) {
         if (authorized) {
             // log to file system
             var mess = stringify(req.body);
+            var host = ((req.get('host') && req.get('host').length > 0) ? req.get('host') : '?');
+
             winstonLogger.info(mess);
 
             // forward to splunk
             if (USE_SPLUNK) {
                 var payload = {
                     message: {
-                        log: logPayload
+                        log: mess,
+                        host: host
                     },
-                    metadata: {
-                        sourceIP: "TBD",
-                        browserType: "TBD",
-                        etc: "TBD"
-                    },
+                    // metadata: {
+                    //    sourceIP: "TBD",
+                    //    browserType: "TBD",
+                    //    etc: "TBD"
+                    //},
                     severity: "info"
                 };
                 winstonLogger.debug('sending payload');
@@ -131,6 +142,7 @@ var getLog = function (req) {
 };
 exports.getLog = getLog;
 
+// handle posts to /log endpoint
 app.post('/log', function (req, res) {
     getLog(req).then(function (mess) {
         res.status(200);
@@ -141,4 +153,4 @@ app.post('/log', function (req, res) {
     });
 });
 
-winstonLogger.info(`Splunk Forwarder started on host:` +  SERVICE_IP + `  port: ` + SERVICE_PORT);
+winstonLogger.info('Splunk Forwarder started on host: ' +  SERVICE_IP + '  port: ' + SERVICE_PORT);
