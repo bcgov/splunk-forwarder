@@ -11,11 +11,9 @@ var utils = require("./utils");
 var SERVICE_IP = process.env.SERVICE_IP || '0.0.0.0';
 var SERVICE_PORT = process.env.SERVICE_PORT || 5040;
 var SERVICE_AUTH_TOKEN = 'NO_TOKEN';
-if (process.env.SERVICE_USE_AUTH &&
-    process.env.SERVICE_USE_AUTH == 'true' &&
-    process.env.SERVICE_AUTH_TOKEN &&
-    process.env.SERVICE_AUTH_TOKEN.length > 0) {
-        SERVICE_AUTH_TOKEN = process.env.SERVICE_AUTH_TOKEN;
+var USE_AUTH = (process.env.SERVICE_USE_AUTH && process.env.SERVICE_USE_AUTH == 'true');
+if (USE_AUTH && process.env.SERVICE_AUTH_TOKEN && process.env.SERVICE_AUTH_TOKEN.length > 0) {
+    SERVICE_AUTH_TOKEN = process.env.SERVICE_AUTH_TOKEN;
 }
 var FILE_LOG_LEVEL = process.env.FILE_LOG_LEVEL || 'debug';
 var FILE_LOG_NAME = process.env.FILE_LOG_NAME || './msp.log';
@@ -43,17 +41,17 @@ if (FILE_LOG_LEVEL != 'debug')
     winston.remove(winston.transports.Console);
 
 // Create a new Splunk logger
-if (USE_SPLUNK) {
-    var config = {
-        token: SERVICE_AUTH_TOKEN,
-        url: SPLUNK_URL
-    };
-    var splunkLogger = new SplunkLogger(config);
-    Logger.error = function (err, context) {
-        winstonLogger.error(`SplunkLogger error:` + err + `  context:` + context);
-    };
-    splunkLogger.requestOptions.strictSSL = true;
-}
+var config = {
+    token: SERVICE_AUTH_TOKEN,
+    level: 'info',
+    url: SPLUNK_URL,
+    maxRetries: 10
+};
+var splunkLogger = new SplunkLogger(config);
+winstonLogger.error = function (err, context) {
+    winstonLogger.error(`SplunkLogger error:` + err + `  context:` + context);
+};
+splunkLogger.requestOptions.strictSSL = true;
 
 // Init app
 if (process.env.NODE_ENV != 'production' ||
@@ -65,6 +63,7 @@ if (process.env.NODE_ENV != 'production' ||
     });
 }
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 var args = process.argv;
 if (args.length == 3 && args[2] == 'server') {
     var server = app.listen(SERVICE_PORT, SERVICE_IP, function() {
@@ -77,23 +76,21 @@ if (args.length == 3 && args[2] == 'server') {
 }
 
 // get a log
-var getLog = function (logPayload, authorization) {
-
-    var responseBody = 'SUCCESS';
-    if (SERVICE_AUTH_TOKEN) {
-        if (authorization != `Basic ${SERVICE_AUTH_TOKEN}`) {
-            responseBody = 'UNAUTHORIZED';
-            resolve({valid: false});
-            return responseBody;
+var getLog = function (req) {
+    return new Promise(function (resolve, reject) {
+        var authorization = req.get('Authorization');
+        winstonLogger.debug(`got auth in header: ${authorization}`);
+        if (SERVICE_AUTH_TOKEN) {
+            if (authorization != `Basic ${SERVICE_AUTH_TOKEN}`) {
+                reject ('UNAUTHORIZED');
+            }
         }
-    }
+        // log to file system
+        winstonLogger.info(`getLog: ${req.payload}`);
+        winstonLogger.debug(`use_splunk: ${USE_SPLUNK}`);
 
-    // log to file system
-    winstonLogger.info(`getLog: ${logPayload}`);
-
-    if (USE_SPLUNK) {
-        return new Promise(function (resolve, reject) {
-
+        // forward to splunk
+        if (USE_SPLUNK) {
             var payload = {
                 message: {
                     log: logPayload
@@ -109,24 +106,27 @@ var getLog = function (logPayload, authorization) {
             splunkLogger.send(payload, function (err, resp, body) {
                 winstonLogger.debug("Response from Splunk Server", body);
             });
-            resolve({valid: true});
-
-        }, function (err) {
-            responseBody = 'FAILURE';
-            winstonLogger.error(err);
-            resolve({valid: false});
-        });
-    }
-    else {
-        return responseBody;
-    }
+            resolve('SUCCESS');
+        }
+        else {
+            resolve('SUCCESS');
+        }
+    }, function(err) {
+        winstonLogger.error(err);
+    });
 };
 exports.getLog = getLog;
 
 app.post('/log', function (req, res) {
-    getLog(req.body, req.get('Authorization'))
-        .then(function (body) {
+    getLog(req)
+        .then(function (responseBody) {
             winstonLogger.debug(`returning: ` + responseBody);
+            if (responseBody == 'SUCCESS')
+                res.status(200);
+            else if (responseBody == 'UNAUTHORIZED')
+                res.status(400);
+            else
+                res.status(500);
             return res.send(responseBody);
         });
 });
