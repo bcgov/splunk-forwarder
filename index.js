@@ -27,6 +27,11 @@ if (process.env.USE_SPLUNK &&
         USE_SPLUNK = true;
         SPLUNK_URL = process.env.SPLUNK_URL;
 }
+var RETRY_COUNT = 0;
+if (process.env.RETRY_COUNT &&
+    process.env.RETRY_COUNT.length > 0) {
+        RETRY_COUNT = parseInt (process.env.RETRY_COUNT);
+}
 
 // Winston Logger init
 var winstonLogger = new winston.Logger({
@@ -46,7 +51,7 @@ var config = {
     token: SERVICE_AUTH_TOKEN,
     level: 'info',
     url: SPLUNK_URL,
-    maxRetries: 10
+    maxRetries: RETRY_COUNT
 };
 var splunkLogger = new SplunkLogger(config);
 winstonLogger.error = function (err, context) {
@@ -79,58 +84,61 @@ if (args.length == 3 && args[2] == 'server') {
 // get a log
 var getLog = function (req) {
     return new Promise(function (resolve, reject) {
-        var authorization = req.get('Authorization');
-        winstonLogger.debug(`got auth in header: ${authorization}`);
-        if (SERVICE_AUTH_TOKEN) {
-            if (authorization != `Basic ${SERVICE_AUTH_TOKEN}`) {
-                reject ('UNAUTHORIZED');
+        var authorized = true;
+        if (USE_AUTH) {
+            if (req.get('Authorization') != `Basic ${SERVICE_AUTH_TOKEN}`) {
+                authorized = false;
             }
         }
-        // log to file system
-        var mess = stringify (req.body);
-        winstonLogger.info(`getLog: ${mess}`);
-        winstonLogger.debug(`use_splunk: ${USE_SPLUNK}`);
+        if (authorized) {
+            // log to file system
+            var mess = stringify(req.body);
+            winstonLogger.info(mess);
 
-        // forward to splunk
-        if (USE_SPLUNK) {
-            var payload = {
-                message: {
-                    log: logPayload
-                },
-                metadata: {
-                    sourceIP: "TBD",
-                    browserType: "TBD",
-                    etc: "TBD"
-                },
-                severity: "info"
-            };
-            winstonLogger.debug(`sending payload`);
-            splunkLogger.send(payload, function (err, resp, body) {
-                winstonLogger.debug("Response from Splunk Server", body);
-            });
-            resolve('SUCCESS');
+            // forward to splunk
+            if (USE_SPLUNK) {
+                var payload = {
+                    message: {
+                        log: logPayload
+                    },
+                    metadata: {
+                        sourceIP: "TBD",
+                        browserType: "TBD",
+                        etc: "TBD"
+                    },
+                    severity: "info"
+                };
+                winstonLogger.debug('sending payload');
+                splunkLogger.send(payload, function (err, resp, body) {
+                    winstonLogger.debug('Response from Splunk Server' + body);
+                });
+                winstonLogger.debug('sent payload');
+                resolve('success');
+            }
+            else {
+                winstonLogger.debug('no splunk');
+                resolve('success');
+            }
         }
         else {
-            resolve('SUCCESS');
+            winstonLogger.info('unauthorized');
+            reject('unauthorized');
         }
     }, function(err) {
-        winstonLogger.error(err);
+        winstonLogger.info('error: ' + err);
+        reject('unauthorized');
     });
 };
 exports.getLog = getLog;
 
 app.post('/log', function (req, res) {
-    getLog(req)
-        .then(function (responseBody) {
-            winstonLogger.debug(`returning: ` + responseBody);
-            if (responseBody == 'SUCCESS')
-                res.status(200);
-            else if (responseBody == 'UNAUTHORIZED')
-                res.status(400);
-            else
-                res.status(500);
-            return res.send(responseBody);
-        });
+    getLog(req).then(function (mess) {
+        res.status(200);
+        return res.send(mess);
+    }).catch(function(mess) {
+        res.status(500);
+        return res.send(mess);
+    });
 });
 
 winstonLogger.info(`Splunk Forwarder started on host:` +  SERVICE_IP + `  port: ` + SERVICE_PORT);
