@@ -2,8 +2,8 @@ apiVersion: v1
 kind: BuildConfig
 metadata:
   name: mygovbc-splunk-forwarder
-  namespace: gcpe-mygovbc-msp-dev
-  selfLink: /oapi/v1/namespaces/gcpe-mygovbc-msp-dev/buildconfigs/mygovbc-splunk-forwarder
+  namespace: gcpe-mygovbc-msp-tools
+  selfLink: /oapi/v1/namespaces/gcpe-mygovbc-msp-tools/buildconfigs/mygovbc-splunk-forwarder
   uid: 4eb43737-d912-11e6-89a5-0050568379a2
   resourceVersion: '33902465'
   creationTimestamp: '2017-01-12T21:58:53Z'
@@ -31,7 +31,7 @@ spec:
   source:
     type: Git
     git:
-      uri: 'https://github.com/bcgov/MyGovBC-Splunk-Forwarder'
+      uri: 'https://github.com/bcgov/Splunk-Forwarder'
       ref: master
   strategy:
     type: Source
