@@ -6,18 +6,18 @@ node('maven') {
        checkout scm   
     }
 
-    stage('code quality check') {
-       echo "Code Quality Check ...."
-       SONARQUBE_PWD = sh (
-             script: 'oc env dc/sonarqube --list | awk  -F  "=" \'/SONARQUBE_ADMINPW/{print $2}\'',
-             returnStdout: true).trim()
-       SONARQUBE_URL = sh (
-             script: 'oc get routes -o wide --no-headers | awk \'/sonarqube/{ print match($0,/edge/) ?  "https://"$2 : "http://"$2 }\'',
-               returnStdout: true).trim()
-       dir('sonar-runner') {
-         sh returnStdout: true, script: "./gradlew sonarqube -Dsonar.host.url=${SONARQUBE_URL} -Dsonar.verbose=true --stacktrace --info  -Dsonar.sources=.."
-       }
-    }
+    // stage('code quality check') {
+    //    echo "Code Quality Check ...."
+    //    SONARQUBE_PWD = sh (
+    //          script: 'oc env dc/sonarqube --list | awk  -F  "=" \'/SONARQUBE_ADMINPW/{print $2}\'',
+    //          returnStdout: true).trim()
+    //    SONARQUBE_URL = sh (
+    //          script: 'oc get routes -o wide --no-headers | awk \'/sonarqube/{ print match($0,/edge/) ?  "https://"$2 : "http://"$2 }\'',
+    //            returnStdout: true).trim()
+    //    dir('sonar-runner') {
+    //      sh returnStdout: true, script: "./gradlew sonarqube -Dsonar.host.url=${SONARQUBE_URL} -Dsonar.verbose=true --stacktrace --info  -Dsonar.sources=.."
+    //    }
+    // }
 
     // Note: openshiftVerifyDeploy requires policy to be added:
     // oc policy add-role-to-user view -z system:serviceaccount:<project-prefix>-tools:jenkins -n <project-prefix>-dev
