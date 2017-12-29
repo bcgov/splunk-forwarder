@@ -38,30 +38,6 @@ node('maven') {
     }
 }
 
-node('bddstack') {
-    stage('Functional Test') {
-       //the checkout is mandatory, otherwise functional test would fail
-       echo "checking out source"
-       checkout scm
-       dir('functional-tests') {
-           // retrieving variables from buildConfig 
-	   TEST_USERNAME = sh (
-             script: 'oc env bc/<name> --list | awk  -F  "=" \'/TEST_USERNAME/{print $2}\'',
-             returnStdout: true).trim()		  
-	   TEST_PASSWORD = sh (
-             script: 'oc env bc/<name> --list | awk  -F  "=" \'/TEST_PASSWORD/{print $2}\'',
-             returnStdout: true).trim()
-	  try {
-	    sh 'export TEST_USERNAME=${TEST_USERNAME}\nexport TEST_PASSWORD=${TEST_PASSWORD}\n./gradlew --debug --stacktrace chromeHeadlessTest'
-	  } finally { 
-	    archiveArtifacts allowEmptyArchive: true, artifacts: 'build/reports/**/*'
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'build/test-results/**/*'
-            junit 'build/test-results/**/*.xml'
-	  }
-       }
-    }
-}
-
 stage('deploy-test') {
   timeout(time: 3, unit: 'DAYS') {
       input message: "Deploy to test?", submitter: 'admin'
@@ -69,9 +45,9 @@ stage('deploy-test') {
   node('master') {
     echo "Send code to test ...."
     openshiftTag destStream: 'devxp', verbose: 'true', destTag: 'test', srcStream: 'devxp', srcTag: "${IMAGE_HASH}"
-    openshiftVerifyDeployment depCfg: '<dc-test>', namespace: '<project-prefix>-test', replicaCount: 1, verbose: 'false', verifyReplicaCount: 'false'
-    echo "Send email ...."
-    mail (to: 'user@domain', subject: "Job '${env.JOB_NAME}' (${env.BUILD_NUMBER}) promoted to test", body: "URL: ${env.BUILD_URL}.");
+    // openshiftVerifyDeployment depCfg: '<dc-test>', namespace: '<project-prefix>-test', replicaCount: 1, verbose: 'false', verifyReplicaCount: 'false'
+    // echo "Send email ...."
+    // mail (to: 'user@domain', subject: "Job '${env.JOB_NAME}' (${env.BUILD_NUMBER}) promoted to test", body: "URL: ${env.BUILD_URL}.");
     echo "Stage deploy-test done"
   }
 }
@@ -84,9 +60,9 @@ stage('deploy-prod') {
     echo "Send code to production ...."
     openshiftTag destStream: '<name>', verbose: 'true', destTag: 'prodblue', srcStream: 'devxp', srcTag: 'prod'
     openshiftTag destStream: '<name>', verbose: 'true', destTag: 'prod', srcStream: 'devxp', srcTag: "${IMAGE_HASH}"
-    openshiftVerifyDeployment depCfg: '<dc-prod>', namespace: '<project-prefix>-prod', replicaCount: 1, verbose: 'false', verifyReplicaCount: 'false'
-    echo "Send email ...."
-    mail (to: 'user@domain', subject: "Job '${env.JOB_NAME}' (${env.BUILD_NUMBER}) promoted to production", body: "URL: ${env.BUILD_URL}.");
+    // openshiftVerifyDeployment depCfg: '<dc-prod>', namespace: '<project-prefix>-prod', replicaCount: 1, verbose: 'false', verifyReplicaCount: 'false'
+    // echo "Send email ...."
+    // mail (to: 'user@domain', subject: "Job '${env.JOB_NAME}' (${env.BUILD_NUMBER}) promoted to production", body: "URL: ${env.BUILD_URL}.");
     echo "Stage deploy-prod done" 
   }
 }
