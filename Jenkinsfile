@@ -2,29 +2,10 @@ def APP_NAME = 'splunk-forwarder'
 def APP_VERSION = 'master'
 def TAG_NAME = ['dev', 'test', 'prod']
 
-def BUILD_CONFIG = APP_NAME + '-' + APP_VERSION + '-build'
+def BUILD_CONFIG = APP_NAME + '-' + APP_VERSION
 def IMAGESTREAM_NAME = APP_NAME + '-' + APP_VERSION
 
 node {
-
-    // stage('checkout') {
-    //    echo "checking out source"
-    //    echo "Build: ${BUILD_ID}"
-    //    checkout scm   
-    // }
-
-    // stage('code quality check') {
-    //    echo "Code Quality Check ...."
-    //    SONARQUBE_PWD = sh (
-    //          script: 'oc env dc/sonarqube --list | awk  -F  "=" \'/SONARQUBE_ADMINPW/{print $2}\'',
-    //          returnStdout: true).trim()
-    //    SONARQUBE_URL = sh (
-    //          script: 'oc get routes -o wide --no-headers | awk \'/sonarqube/{ print match($0,/edge/) ?  "https://"$2 : "http://"$2 }\'',
-    //            returnStdout: true).trim()
-    //    dir('sonar-runner') {
-    //      sh returnStdout: true, script: "./gradlew sonarqube -Dsonar.host.url=${SONARQUBE_URL} -Dsonar.verbose=true --stacktrace --info  -Dsonar.sources=.."
-    //    }
-    // }
 
     stage('build') {
        echo "Building: " + BUILD_CONFIG
