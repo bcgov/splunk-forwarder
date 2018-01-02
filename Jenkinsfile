@@ -1,10 +1,17 @@
-node('maven') {
+def APP_NAME = 'splunk-forwarder'
+def APP_VERSION = 'master'
+def TAG_NAME = ['dev', 'test', 'prod']
 
-    stage('checkout') {
-       echo "checking out source"
-       echo "Build: ${BUILD_ID}"
-       checkout scm   
-    }
+def BUILD_CONFIG = APP_NAME + '-' + APP_VERSION + '-build'
+def IMAGESTREAM_NAME = APP_NAME + '-' + APP_VERSION
+
+node {
+
+    // stage('checkout') {
+    //    echo "checking out source"
+    //    echo "Build: ${BUILD_ID}"
+    //    checkout scm   
+    // }
 
     // stage('code quality check') {
     //    echo "Code Quality Check ...."
@@ -19,50 +26,30 @@ node('maven') {
     //    }
     // }
 
-    // Note: openshiftVerifyDeploy requires policy to be added:
-    // oc policy add-role-to-user view -z system:serviceaccount:<project-prefix>-tools:jenkins -n <project-prefix>-dev
-    // oc policy add-role-to-user view -z system:serviceaccount:<project-prefix>-tools:jenkins -n <project-prefix>-test
-    // oc policy add-role-to-user view -z system:serviceaccount:<project-prefix>-tools:jenkins -n <project-prefix>-prod
-	
     stage('build') {
-       echo "Building..."
-       openshiftBuild bldCfg: '<name>', showBuildLogs: 'true'
-       echo ">>> Get Image Hash"
-       IMAGE_HASH = sh (
-         script: 'oc get istag <name>:latest -o template --template="{{.image.dockerImageReference}}"|awk -F ":" \'{print $3}\'',
- 	          returnStdout: true).trim()
-       echo ">> IMAGE_HASH: $IMAGE_HASH"
-       openshiftTag destStream: '<name>', verbose: 'true', destTag: 'dev', srcStream: '<name>', srcTag: "${IMAGE_HASH}"
-       openshiftVerifyDeployment depCfg: '<dc-dev>', namespace: '<project-prefix>-dev', replicaCount: 1, verbose: 'false', verifyReplicaCount: 'false'
-       echo ">>>> Deployment Complete"
+       echo "Building: " + BUILD_CONFIG
+       openshiftBuild bldCfg: BUILD_CONFIG, showBuildLogs: 'true'
+       openshiftTag destStream: IMAGESTREAM_NAME, verbose: 'true', destTag: '$BUILD_ID', srcStream: IMAGESTREAM_NAME, srcTag: 'latest'
+    }
+
+    stage('deploy-' + TAG_NAMES[0]) {
+       echo "Deploying to: " + TAG_NAMES[0]
+       echo "tag source " + IMAGESTREAM_NAME + " with tag " + '$BUILD_ID' + " to dest " + IMAGESTREAM_NAME
+       openshiftTag destStream: IMAGESTREAM_NAME, verbose: 'true', destTag: TAG_NAMES[0], srcStream: IMAGESTREAM_NAME, srcTag: '$BUILD_ID'
     }
 }
 
-stage('deploy-test') {
-  timeout(time: 3, unit: 'DAYS') {
-      input message: "Deploy to test?", submitter: 'admin'
-  }
-  node('master') {
-    echo "Send code to test ...."
-    openshiftTag destStream: 'devxp', verbose: 'true', destTag: 'test', srcStream: 'devxp', srcTag: "${IMAGE_HASH}"
-    // openshiftVerifyDeployment depCfg: '<dc-test>', namespace: '<project-prefix>-test', replicaCount: 1, verbose: 'false', verifyReplicaCount: 'false'
-    // echo "Send email ...."
-    // mail (to: 'user@domain', subject: "Job '${env.JOB_NAME}' (${env.BUILD_NUMBER}) promoted to test", body: "URL: ${env.BUILD_URL}.");
-    echo "Stage deploy-test done"
+node {
+  stage('deploy-' + TAG_NAMES[1]) {
+    input "Deploy to " + TAG_NAMES[1] + "?"
+    openshiftTag destStream: IMAGESTREAM_NAME, verbose: 'true', destTag: TAG_NAMES[1], srcStream: IMAGESTREAM_NAME, srcTag: '$BUILD_ID'
   }
 }
 
-stage('deploy-prod') {
-  timeout(time: 3, unit: 'DAYS') {
-      input message: "Deploy to prod?", submitter: 'admin'
-  }
-  node('master') {
-    echo "Send code to production ...."
-    openshiftTag destStream: '<name>', verbose: 'true', destTag: 'prodblue', srcStream: 'devxp', srcTag: 'prod'
-    openshiftTag destStream: '<name>', verbose: 'true', destTag: 'prod', srcStream: 'devxp', srcTag: "${IMAGE_HASH}"
-    // openshiftVerifyDeployment depCfg: '<dc-prod>', namespace: '<project-prefix>-prod', replicaCount: 1, verbose: 'false', verifyReplicaCount: 'false'
-    // echo "Send email ...."
-    // mail (to: 'user@domain', subject: "Job '${env.JOB_NAME}' (${env.BUILD_NUMBER}) promoted to production", body: "URL: ${env.BUILD_URL}.");
-    echo "Stage deploy-prod done" 
+node {
+  stage('deploy-'  + TAG_NAMES[2]) {
+    input "Deploy to " + TAG_NAMES[2] + "?"
+    openshiftTag destStream: IMAGESTREAM_NAME, verbose: 'true', destTag: TAG_NAMES[2], srcStream: IMAGESTREAM_NAME, srcTag: '$BUILD_ID'
   }
 }
+
