@@ -2,7 +2,7 @@
   "kind": "Template",
   "apiVersion": "v1",
   "metadata": {
-    "name": "splunk-forwarder-build",
+    "name": "splunk-forwarder",
     "annotations": {
       "description": "Contains build objects",
       "iconClass": "icon-github"
