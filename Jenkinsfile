@@ -2,8 +2,8 @@ def APP_NAME = 'splunk-forwarder'
 def APP_VERSION = 'master'
 def TAG_NAMES = ['dev', 'test', 'prod']
 
-def BUILD_CONFIG = APP_NAME + '-' + APP_VERSION
-def IMAGESTREAM_NAME = APP_NAME + '-' + APP_VERSION
+def BUILD_CONFIG = APP_NAME + '-build'
+def IMAGESTREAM_NAME = APP_NAME
 
 node {
 
