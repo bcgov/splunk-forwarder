@@ -26,7 +26,7 @@ Then run:
 
 To test:
 
- * curl -XPOST -H "Authorization: Basic XXX" -H "Content-Type: application/json" -d '{"body": "xyz"}' localhost:5504/log
+ * curl -XPOST -H "Authorization: Splunk XXX" -H "Content-Type: application/json" -d '{"body": "xyz"}' localhost:5504/log
 
  where XXX is the SERVICE_AUTH_TOKEN environment variable passed to the service.
 

@@ -94,7 +94,7 @@ var getLog = function (req) {
     return new Promise(function (resolve, reject) {
         var authorized = true;
         if (USE_AUTH) {
-            if (req.get('Authorization') != `Basic ${SERVICE_AUTH_TOKEN}`) {
+            if (req.get('Authorization') != `Splunk ${SERVICE_AUTH_TOKEN}`) {
                 authorized = false;
             }
         }
