@@ -433,6 +433,7 @@ SplunkLogger.prototype._sendEvents = function(context, callback) {
     // Manually set the content-type header, the default is application/json
     // since json is set to true.
     requestOptions.headers["Content-Type"] = "application/x-www-form-urlencoded";
+    requestOptions.strictSSL = false;
     requestOptions.url = this.config.protocol + "://" + this.config.host + ":" + this.config.port + this.config.path;
 
     // Initialize the context again, right before using it

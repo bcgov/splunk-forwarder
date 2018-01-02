@@ -22,7 +22,7 @@ var FILE_LOG_NAME = process.env.FILE_LOG_NAME || './logs/msp.log';
 var USE_SPLUNK = false;
 var SPLUNK_URL = 'NO_SPLUNK';
 if (process.env.USE_SPLUNK &&
-    process.env.USE_SPLUNL == 'true' &&
+    process.env.USE_SPLUNK == 'true' &&
     process.env.SPLUNK_URL &&
     process.env.SPLUNK_URL.length > 0) {
         USE_SPLUNK = true;
@@ -33,6 +33,9 @@ if (process.env.RETRY_COUNT &&
     process.env.RETRY_COUNT.length > 0) {
         RETRY_COUNT = parseInt (process.env.RETRY_COUNT);
 }
+
+// turn off self-cert check
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 // Daily rotate file transport for logs
 var transport = new winston.transports.DailyRotateFile({
