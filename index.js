@@ -4,6 +4,7 @@ require('winston-daily-rotate-file');
 var bodyParser = require('body-parser');
 var stringify = require('json-stringify-safe');
 var app = require('express')();
+var fs = require('fs');
 
 // SplunkLogger
 var SplunkLogger = require("./splunklogger");
@@ -38,6 +39,9 @@ if (process.env.HOSTNAME &&
         HOST_NAME = process.env.HOSTNAME;
 }
 var FILE_LOG_NAME = HOST_NAME + '-' + process.env.FILE_LOG_NAME || './logs/' + HOST_NAME + '-msp.log';
+if (fs.existsSync(FILE_LOG_NAME)) {
+    FILE_LOG_NAME = 'A' + FILE_LOG_NAME;
+}
 
 // turn off self-cert check
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
