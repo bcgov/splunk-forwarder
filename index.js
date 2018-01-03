@@ -70,7 +70,7 @@ var splunkLogger = new SplunkLogger(config);
 winstonLogger.error = function (err, context) {
     winstonLogger.error(`SplunkLogger error:` + err + `  context:` + context);
 };
-splunkLogger.requestOptions.strictSSL = true;
+splunkLogger.requestOptions.strictSSL = false;
 
 // Init app
 if (process.env.NODE_ENV != 'production' ||
