@@ -125,12 +125,14 @@
                 }
               }
             ],
-	    "volumes": {
-	      "name": "splunk-local-log",
-	      "persistentVolumeClaim": {
-		"claimName": "splunk-local-log"
-	      }
-	    },
+	    "volumes": [
+	      {
+	        "name": "splunk-local-log",
+	        "persistentVolumeClaim": {
+		  "claimName": "splunk-local-log"
+	        }
+              }
+	    ],
             "dnsPolicy": "ClusterFirst",
             "restartPolicy": "Always",
             "securityContext": {
@@ -281,7 +283,7 @@
       "displayName": "LOG_DIR_NAME",
       "name": "LOG_DIR_NAME",
       "required": true,
-      "value": "/var/logs/"
+      "value": "/var/logs"
     },
     {
       "description": "Log level for File logs (debug, info, etc..)",
