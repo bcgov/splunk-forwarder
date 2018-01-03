@@ -18,7 +18,6 @@ if (USE_AUTH && process.env.SERVICE_AUTH_TOKEN && process.env.SERVICE_AUTH_TOKEN
     SERVICE_AUTH_TOKEN = process.env.SERVICE_AUTH_TOKEN;
 }
 var FILE_LOG_LEVEL = process.env.FILE_LOG_LEVEL || 'debug';
-var FILE_LOG_NAME = process.env.FILE_LOG_NAME || './logs/msp.log';
 var USE_SPLUNK = false;
 var SPLUNK_URL = 'NO_SPLUNK';
 if (process.env.USE_SPLUNK &&
@@ -33,6 +32,12 @@ if (process.env.RETRY_COUNT &&
     process.env.RETRY_COUNT.length > 0) {
         RETRY_COUNT = parseInt (process.env.RETRY_COUNT);
 }
+var HOST_NAME = '?';
+if (process.env.HOSTNAME &&
+    process.env.HOSTNAME.length > 0) {
+        HOST_NAME = process.env.HOSTNAME;
+}
+var FILE_LOG_NAME = HOST_NAME + '-' + process.env.FILE_LOG_NAME || './logs/' + HOST_NAME + '-msp.log';
 
 // turn off self-cert check
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
@@ -115,12 +120,13 @@ var getLog = function (req) {
             var times = ((req.get('timestamp') && req.get('timestamp').length > 0) ? req.get('timestamp') : '?');
 
             // write to local filesystem
-            winstonLogger.info(`mess(${mess}) host(${host}) logsource(${logsource}) fhost(${fhost}) conf(${conf}) name(${name}) severity(${severity}) tags(${tags}) program(${program}) times(${times})`);
+            winstonLogger.info(`pod(${HOST_NAME}) mess(${mess}) host(${host}) logsource(${logsource}) fhost(${fhost}) conf(${conf}) name(${name}) severity(${severity}) tags(${tags}) program(${program}) times(${times})`);
 
             // forward to splunk
             if (USE_SPLUNK) {
                 var payload = {
                     message: {
+                        pod: HOST_NAME,
                         log: mess,
                         host: host,
                         logsource: logsource,
