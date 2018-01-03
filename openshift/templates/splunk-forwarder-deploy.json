@@ -248,7 +248,7 @@
       "displayName": "SERVICE_PORT",
       "name": "SERVICE_PORT",
       "required": true,
-      "value": "5505"
+      "value": "8080"
     },
     {
       "description": "Use Authorization token?",
