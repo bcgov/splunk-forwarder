@@ -102,6 +102,7 @@ if (args.length == 3 && args[2] == 'server') {
 var getLog = function (req) {
     return new Promise(function (resolve, reject) {
         var authorized = true;
+
         if (USE_AUTH) {
             if (req.get('Authorization') != `Splunk ${SERVICE_AUTH_TOKEN}`) {
                 authorized = false;
@@ -160,6 +161,7 @@ var getLog = function (req) {
         }
         else {
             winstonLogger.info('unauthorized');
+            winstonLogger.debug('received with headers: ', req.headers);
             reject('unauthorized');
         }
     }, function(err) {
