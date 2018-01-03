@@ -38,10 +38,7 @@ if (process.env.HOSTNAME &&
     process.env.HOSTNAME.length > 0) {
         HOST_NAME = process.env.HOSTNAME;
 }
-var FILE_LOG_NAME = process.env.FILE_LOG_NAME + '-' + HOST_NAME + '.log' || './logs/' + HOST_NAME + '-msp.log';
-if (fs.existsSync(FILE_LOG_NAME)) {
-    FILE_LOG_NAME = process.env.FILE_LOG_NAME + '-' + HOST_NAME + '-A.log';
-}
+var FILE_LOG_NAME = process.env.LOG_DIR_NAME + '/msp-' + HOST_NAME + '.log' || './logs/msp-' + HOST_NAME + '.log';
 
 // turn off self-cert check
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";

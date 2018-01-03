@@ -65,6 +65,12 @@
                     "protocol": "TCP"
                   }
                 ],
+		"volumeMounts": [
+		  {
+		    "mountPath": "/var/logs",
+		    "name": "splunk-local-log"
+		  }
+		],
                 "env": [
                   {
                     "name": "SERVICE_IP",
@@ -83,8 +89,8 @@
                     "value": "${SERVICE_AUTH_TOKEN}"
                   },
                   {
-                    "name": "FILE_LOG_NAME",
-                    "value": "${FILE_LOG_NAME}"
+                    "name": "LOG_DIR_NAME",
+                    "value": "${LOG_DIR_NAME}"
                   },
                   {
                     "name": "FILE_LOG_LEVEL",
@@ -119,11 +125,17 @@
                 }
               }
             ],
+	    "volumes": {
+	      "name": "splunk-local-log",
+	      "persistentVolumeClaim": {
+		"claimName": "splunk-local-log"
+	      }
+	    },
             "dnsPolicy": "ClusterFirst",
             "restartPolicy": "Always",
             "securityContext": {
             },
-            "terminationGracePeriodSeconds": 30
+            "terminationGracePeriodSeconds": 30,
           }
         },
         "test": false,
@@ -266,10 +278,10 @@
     },
     {
       "description": "Directory and name of File logs (will be prepended with day's date",
-      "displayName": "FILE_LOG_NAME",
-      "name": "FILE_LOG_NAME",
+      "displayName": "LOG_DIR_NAME",
+      "name": "LOG_DIR_NAME",
       "required": true,
-      "value": "/var/logs/msp.log"
+      "value": "/var/logs/"
     },
     {
       "description": "Log level for File logs (debug, info, etc..)",
