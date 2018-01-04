@@ -1,45 +1,54 @@
-// dependencies
-var winston = require('winston');
+/*=============================================
+=                Dependencies                 =
+=============================================*/
+const winston = require('winston');
 require('winston-daily-rotate-file');
-var bodyParser = require('body-parser');
-var stringify = require('json-stringify-safe');
-var app = require('express')();
-var fs = require('fs');
-
+const bodyParser = require('body-parser');
+const stringify = require('json-stringify-safe');
+const express = require('express')
+const app = express();
+const fs = require('fs');
+const serveIndex = require('serve-index');
 // SplunkLogger
-var SplunkLogger = require("./splunklogger");
-var utils = require("./utils");
+const SplunkLogger = require("./splunklogger");
+const utils = require("./utils");
+const basicAuth = require('express-basic-auth')
 
-// configuration via environment variables
-var SERVICE_IP = process.env.SERVICE_IP || 'localhost';
-var SERVICE_PORT = process.env.SERVICE_PORT || 5504;
-var SERVICE_AUTH_TOKEN = 'NO_TOKEN';
-var USE_AUTH = (process.env.SERVICE_USE_AUTH && process.env.SERVICE_USE_AUTH == 'true');
-if (USE_AUTH && process.env.SERVICE_AUTH_TOKEN && process.env.SERVICE_AUTH_TOKEN.length > 0) {
-    SERVICE_AUTH_TOKEN = process.env.SERVICE_AUTH_TOKEN;
-}
-var FILE_LOG_LEVEL = process.env.FILE_LOG_LEVEL || 'debug';
-var USE_SPLUNK = false;
-var SPLUNK_URL = 'NO_SPLUNK';
-if (process.env.USE_SPLUNK &&
-    process.env.USE_SPLUNK == 'true' &&
-    process.env.SPLUNK_URL &&
-    process.env.SPLUNK_URL.length > 0) {
-        USE_SPLUNK = true;
-        SPLUNK_URL = process.env.SPLUNK_URL;
-}
-var RETRY_COUNT = 0;
-if (process.env.RETRY_COUNT &&
-    process.env.RETRY_COUNT.length > 0) {
-        RETRY_COUNT = parseInt (process.env.RETRY_COUNT);
-}
-var HOST_NAME = '?';
-if (process.env.HOSTNAME &&
-    process.env.HOSTNAME.length > 0) {
-        HOST_NAME = process.env.HOSTNAME;
-}
-var FILE_LOG_NAME = process.env.LOG_DIR_NAME + '/msp-' + HOST_NAME + '.log' || './logs/msp-' + HOST_NAME + '.log';
+/*=============================================
+=      Environment Variable Configuration     =
+=============================================*/
+const SERVICE_IP = process.env.SERVICE_IP || 'localhost';
+const SERVICE_PORT = process.env.SERVICE_PORT || 5504;
+const FILE_LOG_LEVEL = process.env.FILE_LOG_LEVEL || 'debug';
+const SPLUNK_URL = process.env.SPLUNK_URL || null;
+const RETRY_COUNT = process.env.RETRY_COUNT || 0;
+const HOST_NAME = process.env.HOSTNAME || '?'
+const SERVICE_AUTH_TOKEN = process.env.SERVICE_AUTH_TOKEN || 'NO_TOKEN';
+const SPLUNK_AUTH_TOKEN = process.env.SPLUNK_AUTH_TOKEN || null;
+//Previously USE_AUTH checked for a string "true", now it looks for the boolean
+const USE_AUTH = !!(process.env.SERVICE_USE_AUTH);
 
+const MONITOR_USERNAME = process.env.MONITOR_USERNAME || null;
+const MONITOR_PASSWORD = process.env.MONITOR_PASSWORD || null;
+
+//Defaults to use 750mb total storage.
+const MAX_FILES = process.env.MAX_FILES || 10;
+const MAX_BYTE_SIZE_PER_FILE = process.env.MAX_BYTE_SIZE_PER_FILE || (1024 * 1024 * 75)
+
+//Should not end with a /, "/var/logs" or "logs" is good.
+const LOG_DIR_NAME = process.env.LOG_DIR_NAME || null;
+const FILE_LOG_NAME = LOG_DIR_NAME ?
+    LOG_DIR_NAME + '/msp-' + HOST_NAME + '.log'
+    : './logs/msp-' + HOST_NAME + '.log';
+
+let USE_SPLUNK = false;
+if (process.env.USE_SPLUNK && process.env.USE_SPLUNK == 'true' && SPLUNK_URL) {
+    USE_SPLUNK = true;
+}
+
+/*=============================================
+=            APPLICATION CONFIGURATION        =
+=============================================*/
 // turn off self-cert check
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
@@ -49,7 +58,9 @@ var transport = new winston.transports.DailyRotateFile({
     datePattern: 'yyyy-MM-dd-',
     prepend: true,
     level: FILE_LOG_LEVEL,
-    timestamp: true
+    timestamp: true,
+    maxsize: MAX_BYTE_SIZE_PER_FILE,
+    maxFiles: MAX_FILES,
 });
 
 // Winston Logger init
@@ -61,23 +72,26 @@ var winstonLogger = new winston.Logger({
     ]
 });
 
-// add timestamp, remove console if not in debug mode
-if (FILE_LOG_LEVEL != 'debug')
-    winston.remove(winston.transports.Console);
-
-// Create a new Splunk logger
-var config = {
-    token: SERVICE_AUTH_TOKEN,
-    level: 'info',
-    url: SPLUNK_URL,
-    maxRetries: RETRY_COUNT
-};
-var splunkLogger = new SplunkLogger(config);
 winstonLogger.error = function (err, context) {
     winstonLogger.error(`SplunkLogger error:` + err + `  context:` + context);
 };
+
+// remove console if not in debug mode
+if (FILE_LOG_LEVEL != 'debug') {
+    winston.remove(winston.transports.Console);
+}
+
+var splunkLogger = new SplunkLogger({
+    token: SERVICE_AUTH_TOKEN,
+    level: 'info',
+    url: SPLUNK_URL,
+    maxRetries: RETRY_COUNT,
+});
 splunkLogger.requestOptions.strictSSL = false;
 
+/*=============================================
+=              Main Application               =
+=============================================*/
 // Init app
 if (process.env.NODE_ENV != 'production' ||
     process.env.CORS_ALLOW_ALL == 'true') {
@@ -90,24 +104,56 @@ if (process.env.NODE_ENV != 'production' ||
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 var args = process.argv;
+
 if (args.length == 3 && args[2] == 'server') {
     var server = app.listen(SERVICE_PORT, SERVICE_IP, function() {
         var host = server.address().address;
         var port = server.address().port;
-        winstonLogger.info(`loglevel(${FILE_LOG_LEVEL}) fileLocation(${FILE_LOG_NAME})`);
+        winstonLogger.info(`START log server (${HOST_NAME})-  loglevel(${FILE_LOG_LEVEL}) fileLocation(${FILE_LOG_NAME})`)
     });
 }
+
+// handle posts to /log endpoint
+app.post('/log', function (req, res) {
+    getLog(req).then(function (mess) {
+        res.status(200);
+        return res.send(mess);
+    }).catch(function(mess) {
+        res.status(500);
+        return res.send(mess);
+    });
+});
+
+
+//Require HTTP Basic Auth when accessing /monitor routes
+const users = {};
+users[MONITOR_USERNAME] = MONITOR_PASSWORD;
+app.use('/monitor', basicAuth({
+    users,
+    challenge: true, //Show popup box asking for credentials
+}))
+
+
+app.use('/monitor', serveIndex(__dirname + '/' + LOG_DIR_NAME)); //Serve folder
+app.use('/monitor', express.static(LOG_DIR_NAME, { //Serve files
+    //Make browse display instead of download - for  weird file names eg *.log.1
+    setHeaders: (res, path, stat) => {
+        res.set('content-type', 'text/plain; charset=UTF-8')
+    }
+}));
+
+winstonLogger.info('Splunk Forwarder started on host: ' +  SERVICE_IP + '  port: ' + SERVICE_PORT);
+
 
 // get a log
 var getLog = function (req) {
     return new Promise(function (resolve, reject) {
-        var authorized = true;
+        var authorized = false;
 
-        if (USE_AUTH) {
-            if (req.get('Authorization') != `Splunk ${SERVICE_AUTH_TOKEN}`) {
-                authorized = false;
-            }
-        }
+        if (USE_AUTH && req.get('Authorization') === `Splunk ${SERVICE_AUTH_TOKEN}`) {
+            authorized = true;
+        };
+
         if (authorized) {
             // extract stuff
             var mess = stringify(req.body);
@@ -149,7 +195,9 @@ var getLog = function (req) {
                 };
                 winstonLogger.debug('sending payload');
                 splunkLogger.send(payload, function (err, resp, body) {
-                    winstonLogger.debug('Response from Splunk Server' + body);
+                    //TODO: No need to keep logs if successfuly sent to Splunk. How to ensure only deleting OLD logs?
+                    //If a log came in immediately after one that's successfuly sent to Splunk, need to make sure it isn't wiped.
+                    winstonLogger.debug('Response from Splunk Server',  body);
                 });
                 winstonLogger.debug('sent payload');
                 resolve('success');
@@ -166,20 +214,9 @@ var getLog = function (req) {
         }
     }, function(err) {
         winstonLogger.info('error: ' + err);
-        reject('unauthorized');
+        // reject('unauthorized');
+        reject('something went wrong');
     });
 };
+
 exports.getLog = getLog;
-
-// handle posts to /log endpoint
-app.post('/log', function (req, res) {
-    getLog(req).then(function (mess) {
-        res.status(200);
-        return res.send(mess);
-    }).catch(function(mess) {
-        res.status(500);
-        return res.send(mess);
-    });
-});
-
-winstonLogger.info('Splunk Forwarder started on host: ' +  SERVICE_IP + '  port: ' + SERVICE_PORT);
