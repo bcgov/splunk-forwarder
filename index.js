@@ -32,8 +32,8 @@ const MONITOR_USERNAME = process.env.MONITOR_USERNAME || null;
 const MONITOR_PASSWORD = process.env.MONITOR_PASSWORD || null;
 
 //Defaults to use 750mb total storage.
-const MAX_FILES = process.env.MAX_FILES || 10;
-const MAX_BYTE_SIZE_PER_FILE = process.env.MAX_BYTE_SIZE_PER_FILE || (1024 * 1024 * 75)
+const MAX_FILES = parseInt(process.env.MAX_FILES, 10) || 10;
+const MAX_BYTE_SIZE_PER_FILE = parseInt(process.env.MAX_BYTE_SIZE_PER_FILE, 10) || (1024 * 1024 * 75)
 
 //Should not end with a /, "/var/logs" or "logs" is good.
 const LOG_DIR_NAME = process.env.LOG_DIR_NAME || null;
