@@ -108,9 +108,29 @@
                     "name": "RETRY_COUNT",
                     "value": "${RETRY_COUNT}"
                   },
-		  {
+                  {
                     "name": "SPLUNK_AUTH_TOKEN",
                     "value": "${SPLUNK_AUTH_TOKEN}"
+                  },
+                  {
+                    "name": "ONLY_LOG_WHEN_SPLUNK_FAILS",
+                    "value": "${ONLY_LOG_WHEN_SPLUNK_FAILS}"
+                  },
+                  {
+                    "name": "MONITOR_USERNAME",
+                    "value": "${MONITOR_USERNAME}"
+                  },
+                  {
+                    "name": "MONITOR_PASSWORD",
+                    "value": "${MONITOR_PASSWORD}"
+                  },
+                  {
+                    "name": "MAX_FILES",
+                    "value": "${MAX_FILES}"
+                  },
+                  {
+                    "name": "MAX_BYTE_SIZE_PER_FILE",
+                    "value": "${MAX_BYTE_SIZE_PER_FILE}"
                   }
                 ],
                 "resources": {
@@ -319,6 +339,40 @@
       "name": "SPLUNK_AUTH_TOKEN",
       "required": true,
       "value": ""
+    },
+    {
+      "description": "Only write to local log files when there was an error with sending logs to Splunk",
+      "displayName": "ONLY_LOG_WHEN_SPLUNK_FAILS",
+      "name": "ONLY_LOG_WHEN_SPLUNK_FAILS",
+      "required": true,
+      "value": true
+    },
+    {
+      "description": "Username to login to /monitor route via HTTP Basic Authentication",
+      "displayName": "MONITOR_USERNAME",
+      "name": "MONITOR_USERNAME",
+      "value": ""
+    },
+    {
+      "description": "Password to login to /monitor route via HTTP Basic Authentication",
+      "displayName": "MONITOR_PASSWORD",
+      "name": "MONITOR_PASSWORD",
+      "required": true,
+      "value": ""
+    },
+    {
+      "description": "Maximum # of log files to rotate over (total storage size = max # * max byte size)",
+      "displayName": "MAX_FILES",
+      "name": "MAX_FILES",
+      "required": true,
+      "value": 10
+    },
+    {
+      "description": "Maximum byte size of each log file (total storage size = max # * max byte size).",
+      "displayName": "MAX_BYTE_SIZE_PER_FILE",
+      "name": "MAX_BYTE_SIZE_PER_FILE",
+      "required": true,
+      "value": 78643200
     }
   ]
 }
