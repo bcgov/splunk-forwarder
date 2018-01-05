@@ -27,6 +27,8 @@ const SERVICE_AUTH_TOKEN = process.env.SERVICE_AUTH_TOKEN || 'NO_TOKEN';
 const SPLUNK_AUTH_TOKEN = process.env.SPLUNK_AUTH_TOKEN || null;
 //Previously USE_AUTH checked for a string "true", now it looks for the boolean
 const USE_AUTH = !!(process.env.SERVICE_USE_AUTH);
+const ONLY_LOG_WHEN_SPLUNK_FAILS = !!(process.env.ONLY_LOG_WHEN_SPLUNK_FAILS);
+
 
 const MONITOR_USERNAME = process.env.MONITOR_USERNAME || null;
 const MONITOR_PASSWORD = process.env.MONITOR_PASSWORD || null;
@@ -156,19 +158,29 @@ var getLog = function (req) {
 
         if (authorized) {
             // extract stuff
-            var mess = stringify(req.body);
-            var host = ((req.get('host') && req.get('host').length > 0) ? req.get('host') : '?');
-            var logsource = ((req.get('logsource') && req.get('logsource').length > 0) ? req.get('logsource') : '?');
-            var fhost = ((req.get('http_x_forwarded_host') && req.get('http_x_forwarded_host').length > 0) ? req.get('http_x_forwarded_host') : '?');
-            var conf = ((req.get('confirmationNumber') && req.get('confirmationNumber').length > 0) ? req.get('confirmationNumber') : '?');
-            var name = ((req.get('name') && req.get('name').length > 0) ? req.get('name') : '?');
-            var severity = ((req.get('severity') && req.get('severity').length > 0) ? req.get('severity') : '?');
-            var tags = ((req.get('tags') && req.get('tags').length > 0) ? req.get('tags') : '?');
-            var program = ((req.get('program') && req.get('program').length > 0) ? req.get('program') : '?');
-            var times = ((req.get('timestamp') && req.get('timestamp').length > 0) ? req.get('timestamp') : '?');
+            const mess = stringify(req.body);
+            const host = req.get('host') || '?'
+            const logsource = req.get('logsource') || '?'
+            const fhost = req.get('http_x_forwarded_host') || '?'
+            const conf = req.get('confirmationNumber') || '?'
+            const name = req.get('name') || '?'
+            const tags = req.get('tags') || '?'
+            const program = req.get('program') || '?'
+            const times = req.get('timestamp') || '?'
+            const http_host = req.get('http_host') || '?';
+            const method = req.get('request_method') || '?';
+            const forwarded = req.get('http_x_forwarded_for') || '?';
+
+            //todo: Verify! Screenshots showed severity_label.
+            const severity = req.get('severity') || '?' //orig
+            const severityLabel = req.get('severity_label') || '?' //from screenshot
+
+            const logString = `pod(${HOST_NAME}) mess(${mess}) host(${host}) logsource(${logsource}) fhost(${fhost}) conf(${conf}) name(${name}) severity(${severity}) tags(${tags}) program(${program}) times(${times}), http_host(${http_host} method(${method}) http_x_forwarded_for(${forwarded}) )`;
 
             // write to local filesystem
-            winstonLogger.info(`pod(${HOST_NAME}) mess(${mess}) host(${host}) logsource(${logsource}) fhost(${fhost}) conf(${conf}) name(${name}) severity(${severity}) tags(${tags}) program(${program}) times(${times})`);
+            if (!ONLY_LOG_WHEN_SPLUNK_FAILS){
+                winstonLogger.info(logString);
+            }
 
             // forward to splunk
             if (USE_SPLUNK) {
@@ -184,7 +196,10 @@ var getLog = function (req) {
                         severity: severity,
                         tags: tags,
                         program: program,
-                        times: times
+                        times: times,
+                        http_host,
+                        method,
+                        forwarded,
                     },
                     // metadata: {
                     //    sourceIP: "TBD",
@@ -195,8 +210,13 @@ var getLog = function (req) {
                 };
                 winstonLogger.debug('sending payload');
                 splunkLogger.send(payload, function (err, resp, body) {
-                    //TODO: No need to keep logs if successfuly sent to Splunk. How to ensure only deleting OLD logs?
-                    //If a log came in immediately after one that's successfuly sent to Splunk, need to make sure it isn't wiped.
+
+                    //TODO: Once sending to Splunk is setup, double check if err
+                    //is falsy on success or if we have to modify the check
+                    if (ONLY_LOG_WHEN_SPLUNK_FAILS && err){
+                        winstonLogger.info(logString);
+                    }
+
                     winstonLogger.debug('Response from Splunk Server',  body);
                 });
                 winstonLogger.debug('sent payload');
