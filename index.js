@@ -21,15 +21,13 @@ const SERVICE_IP = process.env.SERVICE_IP || 'localhost';
 const SERVICE_PORT = process.env.SERVICE_PORT || 5504;
 const FILE_LOG_LEVEL = process.env.FILE_LOG_LEVEL || 'debug';
 const SPLUNK_URL = process.env.SPLUNK_URL || null;
-const RETRY_COUNT = process.env.RETRY_COUNT || 0;
+const RETRY_COUNT = parseInt(process.env.RETRY_COUNT, 10) || 0;
 const HOST_NAME = process.env.HOSTNAME || '?'
 const SERVICE_AUTH_TOKEN = process.env.SERVICE_AUTH_TOKEN || 'NO_TOKEN';
 const SPLUNK_AUTH_TOKEN = process.env.SPLUNK_AUTH_TOKEN || null;
-//Previously USE_AUTH checked for a string "true", now it looks for the boolean
-const USE_AUTH = !!(process.env.SERVICE_USE_AUTH);
-const ONLY_LOG_WHEN_SPLUNK_FAILS = !!(process.env.ONLY_LOG_WHEN_SPLUNK_FAILS);
-
-
+const USE_SPLUNK = checkEnvBoolean(process.env.USE_SPLUNK);
+const USE_AUTH = checkEnvBoolean(process.env.SERVICE_USE_AUTH);
+const ONLY_LOG_WHEN_SPLUNK_FAILS = checkEnvBoolean(process.env.ONLY_LOG_WHEN_SPLUNK_FAILS);
 const MONITOR_USERNAME = process.env.MONITOR_USERNAME || null;
 const MONITOR_PASSWORD = process.env.MONITOR_PASSWORD || null;
 
@@ -43,10 +41,6 @@ const FILE_LOG_NAME = LOG_DIR_NAME ?
     LOG_DIR_NAME + '/msp-' + HOST_NAME + '.log'
     : './logs/msp-' + HOST_NAME + '.log';
 
-let USE_SPLUNK = false;
-if (process.env.USE_SPLUNK && process.env.USE_SPLUNK == 'true' && SPLUNK_URL) {
-    USE_SPLUNK = true;
-}
 
 /*=============================================
 =            APPLICATION CONFIGURATION        =
@@ -241,3 +235,8 @@ var getLog = function (req) {
 };
 
 exports.getLog = getLog;
+
+
+function checkEnvBoolean(env){
+    return env && env.toLowerCase() === 'true';
+}
