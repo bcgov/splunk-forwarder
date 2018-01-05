@@ -127,22 +127,23 @@ app.post('/log', function (req, res) {
 });
 
 
-//Require HTTP Basic Auth when accessing /monitor routes
-const users = {};
-users[MONITOR_USERNAME] = MONITOR_PASSWORD;
-app.use('/monitor', basicAuth({
-    users,
-    challenge: true, //Show popup box asking for credentials
-}))
+//Setup the password protected /monitor route only if user/password is set.
+if (MONITOR_USERNAME && MONITOR_PASSWORD){
+    const users = {};
+    users[MONITOR_USERNAME] = MONITOR_PASSWORD;
+    app.use('/monitor', basicAuth({
+        users,
+        challenge: true, //Show popup box asking for credentials
+    }))
 
-
-app.use('/monitor', serveIndex(__dirname + '/' + LOG_DIR_NAME)); //Serve folder
-app.use('/monitor', express.static(LOG_DIR_NAME, { //Serve files
-    //Make browse display instead of download - for  weird file names eg *.log.1
-    setHeaders: (res, path, stat) => {
-        res.set('content-type', 'text/plain; charset=UTF-8')
-    }
-}));
+    app.use('/monitor', serveIndex(__dirname + '/' + LOG_DIR_NAME));
+    app.use('/monitor', express.static(LOG_DIR_NAME, {
+        //Get browser to display instead of download weird filenames, *.log.1
+        setHeaders: (res, path, stat) => {
+            res.set('content-type', 'text/plain; charset=UTF-8')
+        }
+    }));
+}
 
 winstonLogger.info('Splunk Forwarder started on host: ' +  SERVICE_IP + '  port: ' + SERVICE_PORT);
 
