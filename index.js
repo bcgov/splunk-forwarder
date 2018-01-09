@@ -124,6 +124,8 @@ app.post('/log', function (req, res) {
     });
 });
 
+// debugging /monitor
+winstonLogger.debug('MONITOR_USERNAME=' + MONITOR_USERNAME + '  MONITOR_PASSWORD=' + MONITOR_PASSWORD);
 
 //Setup the password protected /monitor route only if user/password is set.
 if (MONITOR_USERNAME && MONITOR_PASSWORD){
