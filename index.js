@@ -124,9 +124,13 @@ app.post('/log', function (req, res) {
     });
 });
 
+// debugging /monitor
+winstonLogger.debug('MONITOR_USERNAME=' + MONITOR_USERNAME + '  MONITOR_PASSWORD=' + MONITOR_PASSWORD);
 
 //Setup the password protected /monitor route only if user/password is set.
+
 if (MONITOR_USERNAME.length && MONITOR_PASSWORD.length){
+    winstonLogger.info ('Configuring /monitor for ' + LOG_DIR_NAME);
     const users = {};
     users[MONITOR_USERNAME] = MONITOR_PASSWORD;
     app.use('/monitor', basicAuth({
@@ -138,6 +142,7 @@ if (MONITOR_USERNAME.length && MONITOR_PASSWORD.length){
     app.use('/monitor', express.static(LOG_DIR_NAME, {
         //Get browser to display instead of download weird filenames, *.log.1
         setHeaders: (res, path, stat) => {
+            winstonLogger.debug('Getting monitored files for ' + LOG_DIR_NAME);
             res.set('content-type', 'text/plain; charset=UTF-8')
         }
     }));

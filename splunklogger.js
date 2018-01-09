@@ -60,7 +60,7 @@ function _defaultEventFormatter(message, severity) {
  * var config = {
  *     token: "your-token-here",
  *     name: "my application",
- *     url: "https://splunk.local:8088"
+ *     url: "https://splunk.local:443"
  * };
  *
  * var logger = new SplunkLogger(config);
@@ -82,7 +82,7 @@ function _defaultEventFormatter(message, severity) {
  * @param {string} [config.maxRetries=0] - How many times to retry when HTTP POST to Splunk Enterprise or Splunk Cloud fails.
  * @param {string} [config.path=/services/collector/event/1.0] - URL path to send data to on the Splunk Enterprise or Splunk Cloud server.
  * @param {string} [config.protocol=https] - Protocol used to communicate with the Splunk Enterprise or Splunk Cloud server, <code>http</code> or <code>https</code>.
- * @param {number} [config.port=8088] - HTTP Event Collector port on the Splunk Enterprise or Splunk Cloud server.
+ * @param {number} [config.port=443] - HTTP Event Collector port on the Splunk Enterprise or Splunk Cloud server.
  * @param {string} [config.url] - URL string to pass to {@link https://nodejs.org/api/url.html#url_url_parsing|url.parse}. This will try to set
  * <code>host</code>, <code>path</code>, <code>protocol</code>, <code>port</code>, <code>url</code>. Any of these values will be overwritten if 
  * the corresponding property is set on <code>config</code>.
@@ -140,7 +140,7 @@ var defaultConfig = {
     host: "localhost",
     path: "/services/collector/event/1.0",
     protocol: "https",
-    port: 8088,
+    port: 443,
     level: SplunkLogger.prototype.levels.INFO,
     maxRetries: 0,
     batchInterval: 0,
