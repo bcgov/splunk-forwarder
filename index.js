@@ -126,18 +126,18 @@ app.post('/log', function (req, res) {
 });
 
 //Setup the password protected /monitor
-winstonLogger.debug('Serving index files from ' + __dirname + '/' + LOG_DIR_NAME);
+winstonLogger.debug('Serving index files from ' + LOG_DIR_NAME);
 const users = {};
 users[MONITOR_USERNAME] = MONITOR_PASSWORD;
 app.get('/monito', basicAuth({
    users,
    challenge: true, //Show popup box asking for credentials
 }));
-app.use('/monitor', serveIndex(__dirname + '/' + LOG_DIR_NAME));
-app.use('/monitor', express.static(__dirname + '/' + LOG_DIR_NAME, {
+app.use('/monitor', serveIndex(LOG_DIR_NAME));
+app.use('/monitor', express.static(LOG_DIR_NAME, {
   //Get browser to display instead of download weird filenames, *.log.1
   setHeaders: (res, path, stat) => {
-    winstonLogger.debug('Getting monitored files for ' + __dirname + '/' + LOG_DIR_NAME);
+    winstonLogger.debug('Getting monitored files for ' + LOG_DIR_NAME);
     res.set('content-type', 'text/plain; charset=UTF-8')
   }
 }));
