@@ -125,6 +125,10 @@
                     "value": "${MONITOR_PASSWORD}"
                   },
                   {
+                    "name": "CA_CERT",
+                    "value": "${CA_CERT}"
+                  },
+                  {
                     "name": "MAX_FILES",
                     "value": "${MAX_FILES}"
                   },
@@ -357,6 +361,13 @@
       "description": "Password to login to /monitor route via HTTP Basic Authentication",
       "displayName": "MONITOR_PASSWORD",
       "name": "MONITOR_PASSWORD",
+      "required": true,
+      "value": ""
+    },
+    {
+      "description": "Trusted Certificate for the remote https connection",
+      "displayName": "CA_CERT",
+      "name": "CA_CERT",
       "required": true,
       "value": ""
     },
