@@ -76,6 +76,7 @@ function _defaultEventFormatter(message, severity) {
  *
  * @param {object} config - Configuration settings for a new [SplunkLogger]{@link SplunkLogger}.
  * @param {string} config.token - HTTP Event Collector token, required.
+ * @param {string} config.cacert - HTTP Event Collector CA Cert, required.
  * @param {string} [config.name=splunk-javascript-logging/0.9.3] - Name for this logger.
  * @param {string} [config.host=localhost] - Hostname or IP address of Splunk Enterprise or Splunk Cloud server.
  * @param {string} [config.maxRetries=0] - How many times to retry when HTTP POST to Splunk Enterprise or Splunk Cloud fails.
@@ -220,6 +221,12 @@ SplunkLogger.prototype._initializeConfig = function(config) {
     else if (typeof ret.token !== "string" && typeof config.token !== "string") {
         throw new Error("Config token must be a string.");
     }
+    else if (!ret.hasOwnProperty("cacert") && !config.hasOwnProperty("cacert")) {
+        throw new Error("Config object must have a cacert.");
+    }
+    else if (typeof ret.cacert !== "string" && typeof config.cacert !== "string") {
+        throw new Error("Config cacert must be a string.");
+    }
     else {
         // Specifying the url will override host, port, scheme, & path if possible
         if (config.url) {
@@ -248,6 +255,7 @@ SplunkLogger.prototype._initializeConfig = function(config) {
 
         // Take the argument's value, then instance value, then the default value
         ret.token = utils.orByProp("token", config, ret);
+        ret.cacert = utils.orByProp("cacert", config, ret);
         ret.name = utils.orByProp("name", config, ret, defaultConfig);
         ret.level = utils.orByProp("level", config, ret, defaultConfig);
 
@@ -429,7 +437,13 @@ SplunkLogger.prototype._sendEvents = function(context, callback) {
     // Makes a copy of the request options so we can set the body
     var requestOptions = this._initializeRequestOptions(this.requestOptions);
     requestOptions.body = this._validateMessage(context.message);
+
+    // add splunk authorization
     requestOptions.headers["Authorization"] = "Splunk " + this.config.token;
+
+    // add the server certificate
+    requestOptions.ca = this.config.cacert;
+
     // Manually set the content-type header, the default is application/json
     // since json is set to true.
     requestOptions.headers["Content-Type"] = "application/x-www-form-urlencoded";
