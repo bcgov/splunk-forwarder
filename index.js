@@ -128,12 +128,12 @@ app.post('/log', function (req, res) {
 //Setup the password protected /monitor
 const users = {};
 users[MONITOR_USERNAME] = MONITOR_PASSWORD;
-app.get('/monitor/', basicAuth({
+app.get('/var/logs/', basicAuth({
    users,
    challenge: true, //Show popup box asking for credentials
 }));
-app.use('/monitor/', serveIndex(__dirname + '/' + LOG_DIR_NAME));
-app.use('/monitor/', express.static(LOG_DIR_NAME, {
+app.use('/var/logs/', serveIndex(__dirname + '/' + LOG_DIR_NAME));
+app.use('/var/logs/', express.static(LOG_DIR_NAME, {
   //Get browser to display instead of download weird filenames, *.log.1
   setHeaders: (res, path, stat) => {
     winstonLogger.debug('Getting monitored files for ' + LOG_DIR_NAME);
