@@ -138,8 +138,8 @@ if (MONITOR_USERNAME.length && MONITOR_PASSWORD.length){
         challenge: true, //Show popup box asking for credentials
     }))
 
-    app.use('/monitor', serveIndex(__dirname + '/' + LOG_DIR_NAME));
-    app.use('/monitor', express.static(LOG_DIR_NAME, {
+    app.use('/msp/monitor', serveIndex(__dirname + '/' + LOG_DIR_NAME));
+    app.use('/msp/monitor', express.static(LOG_DIR_NAME, {
         //Get browser to display instead of download weird filenames, *.log.1
         setHeaders: (res, path, stat) => {
             winstonLogger.debug('Getting monitored files for ' + LOG_DIR_NAME);
