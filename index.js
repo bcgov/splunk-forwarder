@@ -153,7 +153,7 @@ var getLog = function (req) {
             authorized = true;
         };
 
-        if (authorized) {
+        if (authorized || !USE_AUTH) {
             // extract stuff
             const mess = stringify(req.body);
             const host = req.get('host') || '?'
@@ -175,12 +175,15 @@ var getLog = function (req) {
             const logString = `pod(${HOST_NAME}) mess(${mess}) host(${host}) logsource(${logsource}) fhost(${fhost}) conf(${conf}) name(${name}) severity(${severity}) tags(${tags}) program(${program}) times(${times}), http_host(${http_host} method(${method}) http_x_forwarded_for(${forwarded}) )`;
 
             // write to local filesystem
-            if (!ONLY_LOG_WHEN_SPLUNK_FAILS){
+            if (!ONLY_LOG_WHEN_SPLUNK_FAILS && USE_SPLUNK){
                 winstonLogger.info(logString);
             }
 
-            // forward to splunk
-            if (USE_SPLUNK) {
+            if (!USE_SPLUNK){
+                winstonLogger.info(logString);
+                return resolve('success');
+            }
+            else { // forward to splunk
                 var payload = {
                     message: {
                         pod: HOST_NAME,
@@ -217,10 +220,6 @@ var getLog = function (req) {
                     winstonLogger.debug('Response from Splunk Server',  body);
                 });
                 winstonLogger.debug('sent payload');
-                resolve('success');
-            }
-            else {
-                winstonLogger.debug('no splunk');
                 resolve('success');
             }
         }
