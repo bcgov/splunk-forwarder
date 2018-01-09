@@ -128,25 +128,21 @@ app.post('/log', function (req, res) {
 //Setup the password protected /monitor
 const users = {};
 users[MONITOR_USERNAME] = MONITOR_PASSWORD;
-app.get('/', basicAuth({
+app.get('/monitor/', basicAuth({
    users,
    challenge: true, //Show popup box asking for credentials
 }));
-app.use('/', serveIndex(__dirname + '/' + LOG_DIR_NAME));
-app.use('/', express.static(LOG_DIR_NAME, {
+app.use('/monitor/', serveIndex(__dirname + '/' + LOG_DIR_NAME));
+app.use('/monitor/', express.static(LOG_DIR_NAME, {
   //Get browser to display instead of download weird filenames, *.log.1
   setHeaders: (res, path, stat) => {
     winstonLogger.debug('Getting monitored files for ' + LOG_DIR_NAME);
     res.set('content-type', 'text/plain; charset=UTF-8')
   }
 }));
-app.use(function (req, res, next) {
-    winstonLogger.info('baseUrl(' + req.baseUrl + ') originalUrl(' + req.originalUrl + ') rawHeaders(' + req.rawHeaders + ') parsedUrlhref(' + req._parsedUrl.href + ') parsedUrlpath(' + req._parsedUrl.path + ') parsedUrlraw(' + req._parsedUrl._raw + ')');
-    res.status(200);
-});
 app.use(function (err, req, res, next) {
-    winstonLogger.info(req);
-    res.status(404).send('Error');
+    winstonLogger.info(err, req);
+    res.status(500).send('An error has occured: ' + err);
 });
 
 /*
