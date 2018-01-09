@@ -28,8 +28,8 @@ const SPLUNK_AUTH_TOKEN = process.env.SPLUNK_AUTH_TOKEN || null;
 const USE_SPLUNK = checkEnvBoolean(process.env.USE_SPLUNK);
 const USE_AUTH = checkEnvBoolean(process.env.SERVICE_USE_AUTH);
 const ONLY_LOG_WHEN_SPLUNK_FAILS = checkEnvBoolean(process.env.ONLY_LOG_WHEN_SPLUNK_FAILS);
-const MONITOR_USERNAME = process.env.MONITOR_USERNAME || null;
-const MONITOR_PASSWORD = process.env.MONITOR_PASSWORD || null;
+const MONITOR_USERNAME = process.env.MONITOR_USERNAME || '';
+const MONITOR_PASSWORD = process.env.MONITOR_PASSWORD || '';
 
 //TODO: Verify empty string doesn't break requests. Value for Splunklogger has to be string, not null.
 const CA_CERT = process.env.CA_CERT || '';
@@ -126,7 +126,7 @@ app.post('/log', function (req, res) {
 
 
 //Setup the password protected /monitor route only if user/password is set.
-if (MONITOR_USERNAME && MONITOR_PASSWORD){
+if (MONITOR_USERNAME.length && MONITOR_PASSWORD.length){
     const users = {};
     users[MONITOR_USERNAME] = MONITOR_PASSWORD;
     app.use('/monitor', basicAuth({
