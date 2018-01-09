@@ -9,6 +9,7 @@ const express = require('express')
 const app = express();
 const fs = require('fs');
 const serveIndex = require('serve-index');
+
 // SplunkLogger
 const SplunkLogger = require("./splunklogger");
 const utils = require("./utils");
@@ -124,29 +125,45 @@ app.post('/log', function (req, res) {
     });
 });
 
-// debugging /monitor
-winstonLogger.debug('MONITOR_USERNAME=' + MONITOR_USERNAME + '  MONITOR_PASSWORD=' + MONITOR_PASSWORD + '  test=' + (MONITOR_USERNAME && MONITOR_PASSWORD));
+//Setup the password protected /monitor
+const users = {};
+users[MONITOR_USERNAME] = MONITOR_PASSWORD;
+app.use('/msp/monitor', basicAuth({
+   users,
+   challenge: true, //Show popup box asking for credentials
+}));
+app.use('/msp/monitor', serveIndex(__dirname + '/' + LOG_DIR_NAME));
+app.use('/msp/monitor', express.static(LOG_DIR_NAME, {
+  //Get browser to display instead of download weird filenames, *.log.1
+  setHeaders: (res, path, stat) => {
+    winstonLogger.debug('Getting monitored files for ' + LOG_DIR_NAME);
+    res.set('content-type', 'text/plain; charset=UTF-8')
+  }
+}));
 
-//Setup the password protected /monitor route only if user/password is set.
-
-if (MONITOR_USERNAME.length && MONITOR_PASSWORD.length){
+/*
+app.get('/monitor', (req, res) => {
     winstonLogger.info ('Configuring /monitor for ' + LOG_DIR_NAME);
-    const users = {};
-    users[MONITOR_USERNAME] = MONITOR_PASSWORD;
-    app.use('/monitor', basicAuth({
-        users,
-        challenge: true, //Show popup box asking for credentials
-    }))
 
-    app.use('/msp/monitor', serveIndex(__dirname + '/' + LOG_DIR_NAME));
-    app.use('/msp/monitor', express.static(LOG_DIR_NAME, {
-        //Get browser to display instead of download weird filenames, *.log.1
-        setHeaders: (res, path, stat) => {
-            winstonLogger.debug('Getting monitored files for ' + LOG_DIR_NAME);
-            res.set('content-type', 'text/plain; charset=UTF-8')
-        }
-    }));
-}
+    // authentication
+    const b64auth = (req.headers.authorization || '').split(' ')[1] || '';
+    const [login, password] = new Buffer(b64auth, 'base64').toString().split(':');
+
+    // Verify login and password are set and correct
+    if (!login || !password || login !== MONITOR_USERNAME || password !== MONITOR_PASSWORD) {
+        res.set('WWW-Authenticate', 'Basic realm="nope"');
+        res.status(401).send('Access Denied.');
+        winstonLogger.info('Access Denied to ' + login);
+        return;
+    }
+
+    // debug
+    winstonLogger.debug ('Authorized ' + login);
+    res.set('ok');
+    res.status(200);
+    return;
+});
+*/
 
 winstonLogger.info('Splunk Forwarder started on host: ' +  SERVICE_IP + '  port: ' + SERVICE_PORT);
 
