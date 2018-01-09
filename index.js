@@ -30,7 +30,9 @@ const USE_AUTH = checkEnvBoolean(process.env.SERVICE_USE_AUTH);
 const ONLY_LOG_WHEN_SPLUNK_FAILS = checkEnvBoolean(process.env.ONLY_LOG_WHEN_SPLUNK_FAILS);
 const MONITOR_USERNAME = process.env.MONITOR_USERNAME || null;
 const MONITOR_PASSWORD = process.env.MONITOR_PASSWORD || null;
-const CA_CERT = process.env.CA_CERT || null;
+
+//TODO: Verify empty string doesn't break requests. Value for Splunklogger has to be string, not null.
+const CA_CERT = process.env.CA_CERT || '';
 
 //Defaults to use 750mb total storage.
 const MAX_FILES = parseInt(process.env.MAX_FILES, 10) || 10;
