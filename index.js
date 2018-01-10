@@ -9,6 +9,7 @@ const express = require('express')
 const app = express();
 const fs = require('fs');
 const serveIndex = require('serve-index');
+
 // SplunkLogger
 const SplunkLogger = require("./splunklogger");
 const utils = require("./utils");
@@ -40,9 +41,10 @@ const MAX_BYTE_SIZE_PER_FILE = parseInt(process.env.MAX_BYTE_SIZE_PER_FILE, 10) 
 
 //Should not end with a /, "/var/logs" or "logs" is good.
 const LOG_DIR_NAME = process.env.LOG_DIR_NAME || null;
+const APPEND_POD_NAME_TO_FILE = (process.env.APPEND_POD_NAME_TO_FILE == 'true');
 const FILE_LOG_NAME = LOG_DIR_NAME ?
-    LOG_DIR_NAME + '/msp-' + HOST_NAME + '.log'
-    : './logs/msp-' + HOST_NAME + '.log';
+    LOG_DIR_NAME + '/msp-' + (APPEND_POD_NAME_TO_FILE ? HOST_NAME : '') + '.log'
+    : './logs/msp-' + (APPEND_POD_NAME_TO_FILE ? HOST_NAME : '') + '.log';
 
 
 /*=============================================
@@ -81,7 +83,7 @@ if (FILE_LOG_LEVEL != 'debug') {
 }
 
 var splunkLogger = new SplunkLogger({
-    token: SERVICE_AUTH_TOKEN,
+    token: SPLUNK_AUTH_TOKEN,
     cacert: CA_CERT,
     level: 'info',
     url: SPLUNK_URL,
@@ -124,30 +126,26 @@ app.post('/log', function (req, res) {
     });
 });
 
-// debugging /monitor
-winstonLogger.debug('MONITOR_USERNAME=' + MONITOR_USERNAME + '  MONITOR_PASSWORD=' + MONITOR_PASSWORD);
-
-//Setup the password protected /monitor route only if user/password is set.
-
-if (MONITOR_USERNAME.length && MONITOR_PASSWORD.length){
-    winstonLogger.info ('Configuring /monitor for ' + LOG_DIR_NAME);
-    const users = {};
-    users[MONITOR_USERNAME] = MONITOR_PASSWORD;
-    app.use('/monitor', basicAuth({
-        users,
-        challenge: true, //Show popup box asking for credentials
-    }))
-
-    app.use('/monitor', serveIndex(__dirname + '/' + LOG_DIR_NAME));
-    app.use('/monitor', express.static(LOG_DIR_NAME, {
-        //Get browser to display instead of download weird filenames, *.log.1
-        setHeaders: (res, path, stat) => {
-            winstonLogger.debug('Getting monitored files for ' + LOG_DIR_NAME);
-            res.set('content-type', 'text/plain; charset=UTF-8')
-        }
-    }));
-}
-
+//Setup the password protected /monitor
+winstonLogger.debug('Serving index files from ' + LOG_DIR_NAME);
+const users = {};
+users[MONITOR_USERNAME] = MONITOR_PASSWORD;
+app.get('/monito', basicAuth({
+   users,
+   challenge: true, //Show popup box asking for credentials
+}));
+app.use('/monitor', serveIndex(LOG_DIR_NAME));
+app.use('/monitor', express.static(LOG_DIR_NAME, {
+  //Get browser to display instead of download weird filenames, *.log.1
+  setHeaders: (res, path, stat) => {
+    winstonLogger.debug('Getting monitored files for ' + LOG_DIR_NAME);
+    res.set('content-type', 'text/plain; charset=UTF-8')
+  }
+}));
+app.use(function (err, req, res, next) {
+    winstonLogger.info(err, req);
+    res.status(500).send('An error has occured: ' + err);
+});
 winstonLogger.info('Splunk Forwarder started on host: ' +  SERVICE_IP + '  port: ' + SERVICE_PORT);
 
 

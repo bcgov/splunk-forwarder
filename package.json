@@ -10,7 +10,7 @@
   "homepage": "",
   "main": "index.js",
   "scripts": {
-    "prestart": "npm install ; npm install request --save; npm install winston-daily-rotate-file --save",
+    "prestart": "npm install ; npm install request --save; npm install winston-daily-rotate-file --save; npm install serve-index --save; npm install express-basic-auth --save",
     "start": "node $NODE_DEBUG_OPTION index.js server",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
