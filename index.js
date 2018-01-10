@@ -43,8 +43,8 @@ const MAX_BYTE_SIZE_PER_FILE = parseInt(process.env.MAX_BYTE_SIZE_PER_FILE, 10) 
 const LOG_DIR_NAME = process.env.LOG_DIR_NAME || null;
 const APPEND_POD_NAME_TO_FILE = (process.env.APPEND_POD_NAME_TO_FILE == 'true');
 const FILE_LOG_NAME = LOG_DIR_NAME ?
-    LOG_DIR_NAME + '/msp-' + (APPEND_POD_NAME_TO_FILE ? HOST_NAME : '') + '.log'
-    : './logs/msp-' + (APPEND_POD_NAME_TO_FILE ? HOST_NAME : '') + '.log';
+    LOG_DIR_NAME + '/sf' + (APPEND_POD_NAME_TO_FILE ? '-' + HOST_NAME : '') + '.log'
+    : './logs/sf' + (APPEND_POD_NAME_TO_FILE ? '-' + HOST_NAME : '') + '.log';
 
 
 /*=============================================
