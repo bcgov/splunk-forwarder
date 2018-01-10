@@ -41,9 +41,10 @@ const MAX_BYTE_SIZE_PER_FILE = parseInt(process.env.MAX_BYTE_SIZE_PER_FILE, 10) 
 
 //Should not end with a /, "/var/logs" or "logs" is good.
 const LOG_DIR_NAME = process.env.LOG_DIR_NAME || null;
+const APPEND_POD_NAME_TO_FILE = process.env.APPEND_POD_NAME_TO_FILE || null;
 const FILE_LOG_NAME = LOG_DIR_NAME ?
-    LOG_DIR_NAME + '/msp-' + HOST_NAME + '.log'
-    : './logs/msp-' + HOST_NAME + '.log';
+    LOG_DIR_NAME + '/msp-' + (APPEND_POD_NAME_TO_FILE ? HOST_NAME : '') + '.log'
+    : './logs/msp-' + (APPEND_POD_NAME_TO_FILE ? HOST_NAME : '') + '.log';
 
 
 /*=============================================
@@ -82,7 +83,7 @@ if (FILE_LOG_LEVEL != 'debug') {
 }
 
 var splunkLogger = new SplunkLogger({
-    token: SERVICE_AUTH_TOKEN,
+    token: SPLUNK_AUTH_TOKEN,
     cacert: CA_CERT,
     level: 'info',
     url: SPLUNK_URL,
@@ -145,31 +146,6 @@ app.use(function (err, req, res, next) {
     winstonLogger.info(err, req);
     res.status(500).send('An error has occured: ' + err);
 });
-
-/*
-app.get('/monitor', (req, res) => {
-    winstonLogger.info ('Configuring /monitor for ' + LOG_DIR_NAME);
-
-    // authentication
-    const b64auth = (req.headers.authorization || '').split(' ')[1] || '';
-    const [login, password] = new Buffer(b64auth, 'base64').toString().split(':');
-
-    // Verify login and password are set and correct
-    if (!login || !password || login !== MONITOR_USERNAME || password !== MONITOR_PASSWORD) {
-        res.set('WWW-Authenticate', 'Basic realm="nope"');
-        res.status(401).send('Access Denied.');
-        winstonLogger.info('Access Denied to ' + login);
-        return;
-    }
-
-    // debug
-    winstonLogger.debug ('Authorized ' + login);
-    res.set('ok');
-    res.status(200);
-    return;
-});
-*/
-
 winstonLogger.info('Splunk Forwarder started on host: ' +  SERVICE_IP + '  port: ' + SERVICE_PORT);
 
 

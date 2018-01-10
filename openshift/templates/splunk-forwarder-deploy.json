@@ -97,6 +97,10 @@
                     "value": "${FILE_LOG_LEVEL}"
                   },
                   {
+                    "name": "APPEND_POD_NAME_TO_FILE",
+                    "value": "${APPEND_POD_NAME_TO_FILE}"
+                  },
+                  {
                     "name": "USE_SPLUNK",
                     "value": "${USE_SPLUNK}"
                   },
@@ -308,6 +312,12 @@
       "name": "LOG_DIR_NAME",
       "required": true,
       "value": "/var/logs"
+    },
+   {
+      "description": "Append Pod name to log files",
+      "displayName": "APPEND_POD_NAME_TO_FILE",
+      "name": "APPEND_POD_NAME_TO_FILE",
+      "value": "false"
     },
     {
       "description": "Log level for File logs (debug, info, etc..)",
