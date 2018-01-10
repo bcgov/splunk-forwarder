@@ -19,8 +19,8 @@ const basicAuth = require('express-basic-auth')
 =      Environment Variable Configuration     =
 =============================================*/
 const SERVICE_IP = process.env.SERVICE_IP || 'localhost';
-const SERVICE_PORT = process.env.SERVICE_PORT || 5504;
-const FILE_LOG_LEVEL = process.env.FILE_LOG_LEVEL || 'debug';
+const SERVICE_PORT = process.env.SERVICE_PORT || 8080;
+const FILE_LOG_LEVEL = process.env.FILE_LOG_LEVEL || 'info';
 const SPLUNK_URL = process.env.SPLUNK_URL || null;
 const RETRY_COUNT = parseInt(process.env.RETRY_COUNT, 10) || 0;
 const HOST_NAME = process.env.HOSTNAME || '?'
