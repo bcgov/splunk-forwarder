@@ -37,15 +37,31 @@ All configuration is done via a user's shell environment variable and read in No
 
 These are:
 
-*  SERVICE_IP : IP address of where the service runs, defaults to 'localhost'
-*  SERVICE_PORT :  port for the service, defaults to 5504
-*  SERVICE_USE_AUTH : true or false
-*  SERVICE_AUTH_TOKEN :  security token passed to service and to splunk server
-*  FILE_LOG_LEVEL : log level for local log file, defaults to 'debug'
-*  FILE_LOG_NAME : name of local log file, defaults to './msp.log'
-*  USE_SPLUNK : true or false
-*  SPLUNK_URL : url of Splunk Server
-*  RETRY_COUNT : the number of times to retry the Splunk Server
+| Environment Variable  | Description |
+| --------------------- | ------------- |
+| SERVICE_IP (string)           | IP address of where the service runs, defaults to 'localhost'  |
+| SERVICE_PORT (number)         | port for the service, Default: 5504  |
+| HOSTNAME  (string)            | the name of the host or the pod
+| SERVICE_USE_AUTH  (boolean)   | true or false
+| SERVICE_AUTH_TOKEN   (string) | security token passed to service and to splunk server
+| FILE_LOG_LEVEL  (string)      | log level for local log file, defaults to 'debug'
+| FILE_LOG_NAME  (string)       | name of local log file, defaults to './msp.log'
+| LOG_DIR_NAME  (string)        | Directory path to store local log files
+| USE_SPLUNK  (boolean)         | use splunk or just log locally
+| SPLUNK_URL  (string)          | url of Splunk Server
+| RETRY_COUNT  (number)         | the number of times to retry the Splunk Server
+| ONLY_LOG_WHEN_SPLUNK_FAILS (boolean) |only write to local file system when there's an error sending to Splunk. Ignored if USE_SPLUNK is false
+| MONITOR_USERNAME  (string)    | username for the /monitor route to view logs. Optional, but necessary for the route.
+| MONITOR_PASSWORD  (string)    | password for the /monitor route to view logs. Optional, but necessary for the route.
+| CA_CERT  (string)             | A string of the CA cert to use with SplunkLogger
+| MAX_FILES  (number)           | total number of log files to rotate over. Default: 10.
+| MAX_BYTE_SIZE_PER_FILE  (number) | total number of each log file. Default: (1024 * 1024 * 75) = 75mb.
+| APPEND_POD_NAME_TO_FILE (boolean) | Whether the pod name (hostname) should be appended to the local log file name |
+
+
+The max storage size used for the entire splunk-forwarder will be `MAX_FILES * MAX_BYTES_PER_FILE`. It's default storage size is 750mb.
+
+The `MONITOR_` variables are optional, but in order to view logs from a web interface, both the variables must be defined.
 
 
 ## Production Setup
