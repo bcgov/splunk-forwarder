@@ -164,7 +164,7 @@ var getLog = function (req) {
             const host = req.get('host') || '?'
             const logsource = req.get('logsource') || '?'
             const fhost = req.get('http_x_forwarded_host') || '?'
-            const conf = req.get('confirmationNumber') || '?'
+            const conf = req.body.body.confirmationNumber || '?'
             const name = req.get('name') || '?'
             const tags = req.get('tags') || '?'
             const program = req.get('program') || '?'
@@ -172,12 +172,13 @@ var getLog = function (req) {
             const http_host = req.get('http_host') || '?';
             const method = req.get('request_method') || '?';
             const forwarded = req.get('http_x_forwarded_for') || '?';
-
+            const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress || '?'
+            const browser = req.headers['user-agent'];
             //todo: Verify! Screenshots showed severity_label.
             const severity = req.get('severity') || '?' //orig
             const severityLabel = req.get('severity_label') || '?' //from screenshot
 
-            const logString = `pod(${HOST_NAME}) mess(${mess}) host(${host}) logsource(${logsource}) fhost(${fhost}) conf(${conf}) name(${name}) severity(${severity}) tags(${tags}) program(${program}) times(${times}), http_host(${http_host} method(${method}) http_x_forwarded_for(${forwarded}) )`;
+            const logString = `pod(${HOST_NAME}) mess(${mess}) host(${host}) logsource(${logsource}) fhost(${fhost}) conf(${conf}) name(${name}) severity(${severity}) tags(${tags}) program(${program}) times(${times})  browser(${browser}) sourceIP(${ip}), http_host(${http_host} method(${method}) http_x_forwarded_for(${forwarded}) )`;
 
             // write to local filesystem
             if (!ONLY_LOG_WHEN_SPLUNK_FAILS && USE_SPLUNK){
@@ -205,6 +206,8 @@ var getLog = function (req) {
                         http_host,
                         method,
                         forwarded,
+                        sourceIP: ip,
+                        browserType: browser,
                     },
                     // metadata: {
                     //    sourceIP: "TBD",
