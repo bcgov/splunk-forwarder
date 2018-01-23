@@ -157,14 +157,14 @@ var getLog = function (req) {
         if (USE_AUTH && req.get('Authorization') === `Splunk ${SERVICE_AUTH_TOKEN}`) {
             authorized = true;
         };
-
         if (authorized || !USE_AUTH) {
             // extract stuff
             const mess = stringify(req.body);
             const host = req.get('host') || '?'
             const logsource = req.get('logsource') || '?'
             const fhost = req.get('http_x_forwarded_host') || '?'
-            const conf = req.body.body.confirmationNumber || '?'
+            const conf = (req.body &&  req.body.body && req.body.body.confirmationNumber) || '?'
+            const applicationId = (req.body && req.body.meta &&req.body.meta.applicationId ) || '?'
             const name = req.get('name') || '?'
             const tags = req.get('tags') || '?'
             const program = req.get('program') || '?'
@@ -178,7 +178,7 @@ var getLog = function (req) {
             const severity = req.get('severity') || '?' //orig
             const severityLabel = req.get('severity_label') || '?' //from screenshot
 
-            const logString = `pod(${HOST_NAME}) mess(${mess}) host(${host}) logsource(${logsource}) fhost(${fhost}) conf(${conf}) name(${name}) severity(${severity}) tags(${tags}) program(${program}) times(${times})  browser(${browser}) sourceIP(${ip}), http_host(${http_host} method(${method}) http_x_forwarded_for(${forwarded}) )`;
+            const logString = `pod(${HOST_NAME}) mess(${mess}) host(${host}) logsource(${logsource}) fhost(${fhost}) conf(${conf}) name(${name}) severity(${severity}) tags(${tags}) program(${program}) times(${times})  browser(${browser}) sourceIP(${ip}), applicationId(${applicationId}) ,http_host(${http_host} method(${method}) http_x_forwarded_for(${forwarded}) )`;
 
             // write to local filesystem
             if (!ONLY_LOG_WHEN_SPLUNK_FAILS && USE_SPLUNK){
@@ -208,6 +208,7 @@ var getLog = function (req) {
                         forwarded,
                         sourceIP: ip,
                         browserType: browser,
+                        applicationId:applicationId
                     },
                     // metadata: {
                     //    sourceIP: "TBD",
@@ -218,7 +219,6 @@ var getLog = function (req) {
                 };
                 winstonLogger.debug('sending payload');
                 splunkLogger.send(payload, function (err, resp, body) {
-
                     //TODO: Once sending to Splunk is setup, double check if err
                     //is falsy on success or if we have to modify the check
                     if (ONLY_LOG_WHEN_SPLUNK_FAILS && err){
