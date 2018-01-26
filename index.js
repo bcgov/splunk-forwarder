@@ -163,8 +163,8 @@ var getLog = function (req) {
             const host = req.get('host') || '?'
             const logsource = req.get('logsource') || '?'
             const fhost = req.get('http_x_forwarded_host') || '?'
-            const conf = (req.body &&  req.body.body && req.body.body.confirmationNumber) || '?'
-            const applicationId = (req.body && req.body.meta &&req.body.meta.applicationId ) || '?'
+            const refNo = req.get('referenceNumber') || '?'
+            const applicationId = req.get('applicationId') || '?'
             const name = req.get('name') || '?'
             const tags = req.get('tags') || '?'
             const program = req.get('program') || '?'
@@ -178,7 +178,7 @@ var getLog = function (req) {
             const severity = req.get('severity') || '?' //orig
             const severityLabel = req.get('severity_label') || '?' //from screenshot
 
-            const logString = `pod(${HOST_NAME}) mess(${mess}) host(${host}) logsource(${logsource}) fhost(${fhost}) conf(${conf}) name(${name}) severity(${severity}) tags(${tags}) program(${program}) times(${times})  browser(${browser}) sourceIP(${ip}), applicationId(${applicationId}) ,http_host(${http_host} method(${method}) http_x_forwarded_for(${forwarded}) )`;
+            const logString = `applicationId(${applicationId}) method(${method}) mess(${mess}) host(${host}) logsource(${logsource}) fhost(${fhost}) refNo(${refNo}) name(${name}) severity(${severity}) tags(${tags}) program(${program}) times(${times})  browser(${browser}) sourceIP(${ip}), http_host(${http_host} http_x_forwarded_for(${forwarded}) pod(${HOST_NAME})`;
 
             // write to local filesystem
             if (!ONLY_LOG_WHEN_SPLUNK_FAILS && USE_SPLUNK){
