@@ -178,7 +178,7 @@ var getLog = function (req) {
             const severity = req.get('severity') || '?' //orig
             const severityLabel = req.get('severity_label') || '?' //from screenshot
 
-            const logString = `applicationId(${applicationId}) program(${program}) mess(${mess}) host(${host}) logsource(${logsource}) fhost(${fhost}) refNo(${refNo}) name(${name}) severity(${severity}) tags(${tags}) method(${method}) times(${times})  browser(${browser}) sourceIP(${ip}), http_host(${http_host} http_x_forwarded_for(${forwarded}) pod(${HOST_NAME})`;
+            const logString = `applicationId(${applicationId}) program(${program}) mess(${mess}) host(${host}) logsource(${logsource}) fhost(${fhost}) refNo(${refNo}) name(${name}) severity(${severity}) tags(${tags}) method(${method}) times(${times})  browser(${browser}) sourceIP(${ip}), http_host(${http_host}) http_x_forwarded_for(${forwarded}) pod(${HOST_NAME})`;
 
             // write to local filesystem
             if (!ONLY_LOG_WHEN_SPLUNK_FAILS && USE_SPLUNK){
