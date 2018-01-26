@@ -76,7 +76,8 @@ This is often useful when the remote Splunk Service is unavailable.
 
 The username and password should match the environment variables configured.
 
-Splunk Forwarder Client
+## Splunk Forwarder Client
+
 An application client wishing to use the Splunk-Forwarder, will make an HTTP POST request to the host/port that the Splunk Forwarder listens on.  Typically, the following environment values are used in the client:
 
 | Environment Variable  | Description |
@@ -87,6 +88,7 @@ An application client wishing to use the Splunk-Forwarder, will make an HTTP POS
  	 
 The client creates an http POST request.  An example of a function that posts a message string in javascript:
 
+```
 function logSplunkError (message) {
 
 var body = JSON.stringify({
@@ -127,7 +129,7 @@ req.on('error', function (e) {
 req.write(body);
 req.end();
 }
-
+```
  
 
 Notice that all POSTs are made to the path "/log" of the splunk-forwarder.
