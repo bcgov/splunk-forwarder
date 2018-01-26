@@ -178,7 +178,7 @@ var getLog = function (req) {
             const severity = req.get('severity') || '?' //orig
             const severityLabel = req.get('severity_label') || '?' //from screenshot
 
-            const logString = `applicationId(${applicationId}) method(${method}) mess(${mess}) host(${host}) logsource(${logsource}) fhost(${fhost}) refNo(${refNo}) name(${name}) severity(${severity}) tags(${tags}) program(${program}) times(${times})  browser(${browser}) sourceIP(${ip}), http_host(${http_host} http_x_forwarded_for(${forwarded}) pod(${HOST_NAME})`;
+            const logString = `applicationId(${applicationId}) program(${program}) mess(${mess}) host(${host}) logsource(${logsource}) fhost(${fhost}) refNo(${refNo}) name(${name}) severity(${severity}) tags(${tags}) method(${method}) times(${times})  browser(${browser}) sourceIP(${ip}), http_host(${http_host} http_x_forwarded_for(${forwarded}) pod(${HOST_NAME})`;
 
             // write to local filesystem
             if (!ONLY_LOG_WHEN_SPLUNK_FAILS && USE_SPLUNK){
@@ -192,23 +192,23 @@ var getLog = function (req) {
             else { // forward to splunk
                 var payload = {
                     message: {
-                        pod: HOST_NAME,
+                        applicationId:applicationId,
+                        program: program,
                         log: mess,
-                        host: host,
-                        logsource: logsource,
-                        forwardedHost: fhost,
-                        confirmationNumber: conf,
+                        times: times,
+                        refNo: refNo,
                         name: name,
                         severity: severity,
                         tags: tags,
-                        program: program,
-                        times: times,
-                        http_host,
-                        method,
-                        forwarded,
-                        sourceIP: ip,
+                        http_host: http_host,
+                        method: method,
+                        host: host,
+                        pod: HOST_NAME,
+                        forwardedHost: fhost,
+                        forwarded: forwarded,
                         browserType: browser,
-                        applicationId:applicationId
+                        sourceIP: ip,
+                        logsource: logsource
                     },
                     // metadata: {
                     //    sourceIP: "TBD",
