@@ -76,6 +76,63 @@ This is often useful when the remote Splunk Service is unavailable.
 
 The username and password should match the environment variables configured.
 
+Splunk Forwarder Client
+An application client wishing to use the Splunk-Forwarder, will make an HTTP POST request to the host/port that the Splunk Forwarder listens on.  Typically, the following environment values are used in the client:
+
+| Environment Variable  | Description |
+| --------------------- | ------------- |
+| LOGGER_HOST (string)	| name of the Splunk Forwarder service. In OpenShift this is splunk-forwarder. Can be an IP address.|
+| LOGGER_PORT (number)	| port for the service, Default: 8080|
+| SPLUNK_AUTH_TOKEN (string)| 	security token used by clients to connect to Splunk Forwarder|
+ 	 
+The client creates an http POST request.  An example of a function that posts a message string in javascript:
+
+function logSplunkError (message) {
+
+var body = JSON.stringify({
+   message: message
+})
+
+var options = {
+  hostname: process.env.LOGGER_HOST,
+  port: process.env.LOGGER_PORT,
+  path: '/log',
+  method: 'POST',
+  headers: {
+     'Content-Type': 'application/json',
+     'Authorization': 'Splunk ' + process.env.SPLUNK_AUTH_TOKEN,
+     'Content-Length': Buffer.byteLength(body),
+     'logsource': process.env.HOSTNAME,
+     'timestamp': moment().format('DD-MMM-YYYY'),
+     'program': 'name of the client application',
+     'serverity': 'error'
+   }
+};
+
+var req = http.request(options, function (res) {
+   res.setEncoding('utf8');
+   res.on('data', function (chunk) {
+      console.log("Body chunk: " + JSON.stringify(chunk));
+   });
+   res.on('end', function () {
+      console.log('End of chunks');
+   });
+});
+
+req.on('error', function (e) {
+   console.error("error sending to splunk-forwarder: " + e.message);
+});
+
+// write data to request body
+req.write(body);
+req.end();
+}
+
+ 
+
+Notice that all POSTs are made to the path "/log" of the splunk-forwarder.
+
+Also notice the format of the Authorization header as required by Splunk HEC.
 
 ## Production Setup
 

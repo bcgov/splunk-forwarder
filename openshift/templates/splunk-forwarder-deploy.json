@@ -359,7 +359,7 @@
       "displayName": "ONLY_LOG_WHEN_SPLUNK_FAILS",
       "name": "ONLY_LOG_WHEN_SPLUNK_FAILS",
       "required": true,
-      "value": true
+      "value": "true"
     },
     {
       "description": "Username to login to /monitor route via HTTP Basic Authentication",
@@ -386,14 +386,14 @@
       "displayName": "MAX_FILES",
       "name": "MAX_FILES",
       "required": true,
-      "value": 10
+      "value": "10"
     },
     {
       "description": "Maximum byte size of each log file (total storage size = max # * max byte size).",
       "displayName": "MAX_BYTE_SIZE_PER_FILE",
       "name": "MAX_BYTE_SIZE_PER_FILE",
       "required": true,
-      "value": 78643200
+      "value": "78643200"
     }
   ]
 }
