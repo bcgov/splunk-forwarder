@@ -130,7 +130,7 @@ app.post('/log', function (req, res) {
 winstonLogger.debug('Serving index files from ' + LOG_DIR_NAME);
 const users = {};
 users[MONITOR_USERNAME] = MONITOR_PASSWORD;
-app.get('/monito', basicAuth({
+app.get('/monitor', basicAuth({
    users,
    challenge: true, //Show popup box asking for credentials
 }));
