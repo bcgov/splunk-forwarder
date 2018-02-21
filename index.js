@@ -225,7 +225,7 @@ var getLog = function (req) {
                         winstonLogger.info(logString);
                     }
 
-                    winstonLogger.debug('Response from Splunk Server',  body);
+                    winstonLogger.debug('ONLY_LOG_WHEN_SPLUNK_FAILS=' + ONLY_LOG_WHEN_SPLUNK_FAILS + ' err=' + JSON.stringify(err) + ' Response from Splunk Server' + body);
                 });
                 winstonLogger.debug('sent payload');
                 resolve('success');
