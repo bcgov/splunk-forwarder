@@ -121,8 +121,9 @@ app.post('/log', function (req, res) {
         res.status(200);
         return res.send(mess);
     }).catch(function(mess) {
-        res.status(500);
-        return res.send(mess);
+        res.status(200);
+        winstonLogger.error(mess);
+        return res.send('An error has occured');
     });
 });
 
@@ -144,7 +145,7 @@ app.use('/monitor', express.static(LOG_DIR_NAME, {
 }));
 app.use(function (err, req, res, next) {
     winstonLogger.info(err, req);
-    res.status(500).send('An error has occured: ' + err);
+    res.status(200).send('An error has occured.');
 });
 winstonLogger.info('Splunk Forwarder started on host: ' +  SERVICE_IP + '  port: ' + SERVICE_PORT);
 
