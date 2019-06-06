@@ -222,7 +222,7 @@ var getLog = function (req) {
                 splunkLogger.send(payload, function (err, resp, body) {
                     //TODO: Once sending to Splunk is setup, double check if err
                     //is falsy on success or if we have to modify the check
-                    if (ONLY_LOG_WHEN_SPLUNK_FAILS && resp.statusCode != 200){
+                    if (ONLY_LOG_WHEN_SPLUNK_FAILS && resp && resp.statusCode != 200){
                         winstonLogger.info(logString);
                     }
                     winstonLogger.debug('ONLY_LOG_WHEN_SPLUNK_FAILS=' + ONLY_LOG_WHEN_SPLUNK_FAILS + ' resp=' + JSON.stringify(resp) + ' body=' + JSON.stringify(body) + ' Response from Splunk Server' + body);
